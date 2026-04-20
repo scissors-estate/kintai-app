@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>特別休日 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  <nav class="tabs">
+    <a href="/admin" class="tab">勤怠一覧</a>
+    <a href="/approvals" class="tab">承認</a>
+    <a href="/admin/transport" class="tab">交通費</a>
+    <a href="/admin/users" class="tab">従業員</a>
+    <a href="/admin/departments" class="tab">部署</a>
+    <a href="/admin/holidays" class="tab active">特別休日</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  {% if flash %}<div class="flash success">{{ flash }}</div>{% endif %}
+
+  <div class="card">
+    <h2 class="section-title">特別休日の一覧</h2>
+    <p style="font-size:13px; color:#666; margin-bottom:12px;">
+      法定休日として扱われる期間です。土日祝は自動で休日扱いになるので、ここにはお正月・お盆など年ごとに動かない期間を登録します（月-日形式）。
+    </p>
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr><th>名称</th><th>開始（MM-DD）</th><th>終了（MM-DD）</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td class="name">{{ r["name"] }}</td>
+            <td>{{ r["start_date"] }}</td>
+            <td>{{ r["end_date"] }}</td>
+            <td>
+              <form method="post" action="/admin/holidays/delete" style="display:inline"
+                    onsubmit="return confirm('削除しますか？');">
+                <input type="hidden" name="h_id" value="{{ r['id'] }}">
+                <button type="submit" class="link-btn cancel">削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">登録なし</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">特別休日を追加</h2>
+    <form method="post" action="/admin/holidays/create" class="leave-form">
+      <label>名称</label>
+      <input type="text" name="name" required placeholder="例：GW、夏季休業">
+      <label>開始（MM-DD）</label>
+      <input type="text" name="start_date" required pattern="\d{2}-\d{2}" placeholder="例：12-29">
+      <label>終了（MM-DD）</label>
+      <input type="text" name="end_date" required pattern="\d{2}-\d{2}" placeholder="例：01-03">
+      <button type="submit" class="btn-submit">追加する</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>

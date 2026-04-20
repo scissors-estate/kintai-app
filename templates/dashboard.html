@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打刻 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container">
+  <nav class="tabs">
+    <a href="/dashboard" class="tab active">打刻</a>
+    <a href="/monthly" class="tab">月次</a>
+    <a href="/requests" class="tab">申請</a>
+    {% if user["is_approver"] %}<a href="/approvals" class="tab">承認</a>{% endif %}
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  <div class="card center">
+    <div class="today">{{ today }}</div>
+    <div class="clock" id="clock">{{ now }}</div>
+
+    <div class="punch-status">
+      <div class="status-item">
+        <span class="label">出勤</span>
+        <span class="value">{{ clock_in or "--:--" }}</span>
+      </div>
+      <div class="status-item">
+        <span class="label">退勤</span>
+        <span class="value">{{ clock_out or "--:--" }}</span>
+      </div>
+      <div class="status-item">
+        <span class="label">休憩</span>
+        <span class="value">{{ break_text }}</span>
+      </div>
+    </div>
+
+    <form method="post" action="/punch" class="punch-buttons">
+      <button type="submit" name="punch_type" value="in" class="btn btn-in"
+              {% if clock_in %}disabled{% endif %}>
+        出勤
+      </button>
+      <button type="submit" name="punch_type" value="out" class="btn btn-out"
+              {% if not clock_in or clock_out or break_ongoing %}disabled{% endif %}>
+        退勤
+      </button>
+    </form>
+
+    <form method="post" action="/punch" class="break-buttons">
+      {% if not break_ongoing %}
+      <button type="submit" name="punch_type" value="break_in" class="btn btn-break"
+              {% if not clock_in or clock_out %}disabled{% endif %}>
+        休憩開始
+      </button>
+      {% else %}
+      <button type="submit" name="punch_type" value="break_out" class="btn btn-break-end">
+        休憩終了
+      </button>
+      {% endif %}
+    </form>
+  </div>
+</main>
+
+<script>
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = h + ':' + m;
+}
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

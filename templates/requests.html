@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申請 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container">
+  <nav class="tabs">
+    <a href="/dashboard" class="tab">打刻</a>
+    <a href="/monthly" class="tab">月次</a>
+    <a href="/requests" class="tab active">申請</a>
+    {% if user["is_approver"] %}<a href="/approvals" class="tab">承認</a>{% endif %}
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  <div class="card">
+    <h2 class="section-title">有給残日数</h2>
+    <div class="summary-grid">
+      <div class="summary-box"><span>付与</span><strong>{{ granted }}日</strong></div>
+      <div class="summary-box"><span>取得</span><strong>{{ used }}日</strong></div>
+      <div class="summary-box leave"><span>残</span><strong>{{ remaining }}日</strong></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">新規申請</h2>
+    <form method="post" action="/requests/confirm" class="leave-form">
+      <label>申請種別</label>
+      <select name="req_type" id="req_type" onchange="toggleFields()" required>
+        {% for key, label in type_labels.items() %}
+        <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <label>対象日</label>
+      <input type="date" name="target_date" required>
+
+      <div id="f_half_leave" class="dynamic-fields">
+        <label>午前／午後</label>
+        <select name="half_period">
+          <option value="AM">午前</option>
+          <option value="PM">午後</option>
+        </select>
+        <label>種類</label>
+        <select name="leave_kind">
+          <option value="paid">有給（0.5日消化）</option>
+          <option value="unpaid">公休（無給）</option>
+        </select>
+      </div>
+
+      <div id="f_delay" class="dynamic-fields">
+        <label>遅延時間（分）</label>
+        <input type="number" name="delay_minutes" min="1" max="600">
+      </div>
+
+      <div id="f_extra_work" class="dynamic-fields">
+        <label>開始時刻</label>
+        <input type="time" name="start_time">
+        <label>終了時刻</label>
+        <input type="time" name="end_time">
+      </div>
+
+      <div id="f_punch_fix" class="dynamic-fields">
+        <label>出勤時刻</label><input type="time" name="fix_clock_in">
+        <label>休憩開始</label><input type="time" name="fix_break_in">
+        <label>休憩終了</label><input type="time" name="fix_break_out">
+        <label>退勤時刻</label><input type="time" name="fix_clock_out">
+      </div>
+
+      <div id="f_transport" class="dynamic-fields">
+        <label>区間（例：自宅〜事務所）</label>
+        <input type="text" name="transport_route">
+        <label>金額（円）</label>
+        <input type="number" name="transport_amount" min="0" max="100000">
+      </div>
+
+      <label>メモ（任意）</label>
+      <input type="text" name="note" placeholder="理由・補足など">
+
+      <button type="submit" class="btn-submit">申請する</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">申請履歴</h2>
+    {% if my_requests %}
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr><th>対象日</th><th>種別</th><th>詳細</th><th>状態</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {% for r in my_requests %}
+          <tr>
+            <td>{{ r["target_date"] }}</td>
+            <td>{{ type_labels[r["req_type"]] }}</td>
+            <td style="text-align:left; font-size:12px">
+              {% if r["req_type"] == "half_leave" %}{{ r["half_period"] }}
+              {% elif r["req_type"] == "delay" %}{{ r["delay_minutes"] }}分
+              {% elif r["req_type"] == "extra_work" %}{{ r["start_time"] }}〜{{ r["end_time"] }}
+              {% elif r["req_type"] == "punch_fix" %}出{{ r["fix_clock_in"] or "-" }}/退{{ r["fix_clock_out"] or "-" }}
+              {% elif r["req_type"] == "transport" %}{{ r["transport_route"] }} ¥{{ r["transport_amount"] }}
+              {% endif %}
+              {% if r["note"] %}<br>{{ r["note"] }}{% endif %}
+            </td>
+            <td>
+              {% if r["status"] == "pending" %}<span class="status-badge status-break">承認待ち</span>
+              {% elif r["status"] == "approved" %}<span class="status-badge status-working">承認</span>
+              {% else %}<span class="status-badge status-off">却下</span>{% endif %}
+            </td>
+            <td>
+              {% if r["status"] == "pending" %}
+              <form method="post" action="/requests/cancel" style="display:inline">
+                <input type="hidden" name="req_id" value="{{ r['id'] }}">
+                <button type="submit" class="link-btn cancel">取消</button>
+              </form>
+              {% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">まだ申請はありません</p>
+    {% endif %}
+  </div>
+</main>
+
+<script>
+function toggleFields() {
+  const t = document.getElementById('req_type').value;
+  document.querySelectorAll('.dynamic-fields').forEach(el => el.style.display = 'none');
+  const target = document.getElementById('f_' + t);
+  if (target) target.style.display = 'block';
+}
+toggleFields();
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設定 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理{% if user["role"] == "admin" %}（管理者）{% endif %}</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container">
+  {% if user["role"] == "admin" %}
+  <nav class="tabs">
+    <a href="/admin" class="tab">勤怠一覧</a>
+    <a href="/approvals" class="tab">承認</a>
+    <a href="/admin/transport" class="tab">交通費</a>
+    <a href="/admin/users" class="tab">従業員</a>
+    <a href="/admin/departments" class="tab">部署</a>
+    <a href="/admin/holidays" class="tab">特別休日</a>
+    <a href="/settings" class="tab active">設定</a>
+  </nav>
+  {% else %}
+  <nav class="tabs">
+    <a href="/dashboard" class="tab">打刻</a>
+    <a href="/monthly" class="tab">月次</a>
+    <a href="/requests" class="tab">申請</a>
+    {% if user["is_approver"] %}<a href="/approvals" class="tab">承認</a>{% endif %}
+    <a href="/settings" class="tab active">設定</a>
+  </nav>
+  {% endif %}
+
+  {% if flash %}
+  <div class="flash success">{{ flash }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="flash error">{{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="section-title">パスワード変更</h2>
+    <form method="post" action="/settings/password" class="leave-form">
+      <label>現在のパスワード</label>
+      <input type="password" name="current_password" required>
+      <label>新しいパスワード（4文字以上）</label>
+      <input type="password" name="new_password" minlength="4" required>
+      <label>新しいパスワード（確認）</label>
+      <input type="password" name="confirm_password" minlength="4" required>
+      <button type="submit" class="btn-submit">変更する</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>

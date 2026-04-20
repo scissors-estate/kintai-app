@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+kintai.db
+.env
+.venv/
+venv/
+.DS_Store
+Thumbs.db

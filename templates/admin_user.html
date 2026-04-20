@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ target["name"] }} 月次 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  <div class="breadcrumb">
+    <a href="/admin">← 一覧に戻る</a>
+  </div>
+
+  <div class="card">
+    <div class="month-nav">
+      <a href="/admin/user/{{ target['id'] }}?year={{ prev_y }}&month={{ prev_m }}" class="nav-btn">◀ 前月</a>
+      <h2>{{ target["name"] }}（{{ year }}年{{ month }}月）</h2>
+      <a href="/admin/user/{{ target['id'] }}?year={{ next_y }}&month={{ next_m }}" class="nav-btn">次月 ▶</a>
+    </div>
+
+    <div class="summary-grid four">
+      <div class="summary-box">
+        <span>勤務合計</span>
+        <strong>{{ total_work }}</strong>
+      </div>
+      <div class="summary-box overtime">
+        <span>残業合計</span>
+        <strong>{{ total_overtime }}</strong>
+      </div>
+      <div class="summary-box">
+        <span>休憩合計</span>
+        <strong>{{ total_break }}</strong>
+      </div>
+      <div class="summary-box leave">
+        <span>有給取得</span>
+        <strong>{{ leave_count }}日</strong>
+      </div>
+      <div class="summary-box">
+        <span>交通費</span>
+        <strong>¥{{ total_transport }}</strong>
+      </div>
+      <div class="summary-box overtime">
+        <span>休日出勤</span>
+        <strong>
+          {{ holiday_work_days }}日
+          {% if emp_type == "genba_arubaito" and total_holiday_minutes != "0時間00分" %}
+            <br><span style="font-size:13px">{{ total_holiday_minutes }}</span>
+          {% endif %}
+        </strong>
+      </div>
+    </div>
+
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>出勤</th>
+            <th>退勤</th>
+            <th>休憩</th>
+            <th>勤務</th>
+            <th>残業</th>
+            <th>交通費</th>
+            <th>備考</th>
+            <th>編集</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr class="{% if r.is_leave %}row-leave{% endif %}">
+            <td>{{ r.day }}
+              {% for t in r.tags %}<span class="leave-tag">{{ t }}</span>{% endfor %}
+            </td>
+            <td>{{ r.clock_in }}</td>
+            <td>{{ r.clock_out }}</td>
+            <td>{{ r.break }}</td>
+            <td>{{ r.worked }}</td>
+            <td class="{% if r.overtime != '-' %}ot{% endif %}">{{ r.overtime }}</td>
+            <td>{% if r.transport %}¥{{ "{:,}".format(r.transport) }}{% else %}-{% endif %}</td>
+            <td style="text-align:left; font-size:12px; color:#555">
+              {% if r.transport_note %}{{ r.transport_note }}{% endif %}
+              {% if r.note %}<br>{{ r.note }}{% endif %}
+              {% if not r.transport_note and not r.note %}-{% endif %}
+            </td>
+            <td><a href="/admin/edit/{{ target['id'] }}/{{ r.date }}" class="link-btn">編集</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">この月の打刻はまだありません</p>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>

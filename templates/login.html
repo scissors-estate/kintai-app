@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログイン - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-body">
+<div class="login-card">
+  <h1>勤怠管理</h1>
+  <p class="subtitle">ログインしてください</p>
+
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="/login">
+    <label>ログインID</label>
+    <input type="text" name="login_id" required autofocus>
+    <label>パスワード</label>
+    <input type="password" name="password" required>
+    <button type="submit">ログイン</button>
+  </form>
+
+  <div class="hint">
+    <strong>テスト用アカウント</strong><br>
+    管理者: admin / admin123<br>
+    従業員: tanaka / pass123
+  </div>
+</div>
+</body>
+</html>

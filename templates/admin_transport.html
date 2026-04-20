@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交通費一覧 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  <nav class="tabs">
+    <a href="/admin" class="tab">勤怠一覧</a>
+    <a href="/approvals" class="tab">承認</a>
+    <a href="/admin/transport" class="tab active">交通費</a>
+    <a href="/admin/users" class="tab">従業員</a>
+    <a href="/admin/departments" class="tab">部署</a>
+    <a href="/admin/holidays" class="tab">特別休日</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  <div class="card">
+    <div class="month-nav">
+      <a href="/admin/transport?year={{ prev_y }}&month={{ prev_m }}" class="nav-btn">◀ 前月</a>
+      <h2>{{ year }}年{{ month }}月の交通費</h2>
+      <a href="/admin/transport?year={{ next_y }}&month={{ next_m }}" class="nav-btn">次月 ▶</a>
+    </div>
+
+    <div class="summary">
+      <span>承認済み合計</span>
+      <strong>¥{{ formatted_total }}</strong>
+    </div>
+
+    <div class="csv-bar">
+      <a href="/admin/transport/csv?year={{ year }}&month={{ month }}" class="csv-btn">📥 CSVダウンロード</a>
+    </div>
+
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>氏名</th>
+            <th>部署</th>
+            <th>区間</th>
+            <th>金額</th>
+            <th>メモ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r["target_date"] }}</td>
+            <td class="name">{{ r["user_name"] }}</td>
+            <td>{{ r["department_name"] or "-" }}</td>
+            <td style="text-align:left">{{ r["transport_route"] or "-" }}</td>
+            <td>¥{{ "{:,}".format(r["transport_amount"] or 0) }}</td>{# noqa #}
+            <td style="text-align:left; font-size:12px">{{ r["note"] or "-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">この月の交通費申請（承認済）はありません</p>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>

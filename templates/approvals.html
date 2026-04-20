@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>承認 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理{% if is_admin %}（管理者）{% endif %}</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  {% if is_admin %}
+  <nav class="tabs">
+    <a href="/admin" class="tab">勤怠一覧</a>
+    <a href="/approvals" class="tab active">承認</a>
+    <a href="/admin/transport" class="tab">交通費</a>
+    <a href="/admin/users" class="tab">従業員</a>
+    <a href="/admin/departments" class="tab">部署</a>
+    <a href="/admin/holidays" class="tab">特別休日</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+  {% else %}
+  <nav class="tabs">
+    <a href="/dashboard" class="tab">打刻</a>
+    <a href="/monthly" class="tab">月次</a>
+    <a href="/requests" class="tab">申請</a>
+    <a href="/approvals" class="tab active">承認</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="section-title">
+      承認待ちの申請
+      {% if not is_admin %}（同部署のみ表示）{% endif %}
+    </h2>
+
+    {% if pending %}
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr>
+            <th>氏名</th>
+            {% if is_admin %}<th>部署</th>{% endif %}
+            <th>対象日</th>
+            <th>種別</th>
+            <th>詳細</th>
+            <th>メモ</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in pending %}
+          <tr>
+            <td class="name">{{ r["user_name"] }}</td>
+            {% if is_admin %}<td>{{ r["department_name"] or "-" }}</td>{% endif %}
+            <td>{{ r["target_date"] }}</td>
+            <td>{{ type_labels[r["req_type"]] }}</td>
+            <td style="text-align:left; font-size:12px">
+              {% if r["req_type"] == "half_leave" %}{{ r["half_period"] }}
+              {% elif r["req_type"] == "delay" %}{{ r["delay_minutes"] }}分
+              {% elif r["req_type"] == "extra_work" %}{{ r["start_time"] }}〜{{ r["end_time"] }}
+              {% elif r["req_type"] == "punch_fix" %}出{{ r["fix_clock_in"] or "-" }}/退{{ r["fix_clock_out"] or "-" }}
+              {% elif r["req_type"] == "transport" %}{{ r["transport_route"] }} ¥{{ r["transport_amount"] }}
+              {% else %}-{% endif %}
+            </td>
+            <td style="font-size:12px">{{ r["note"] or "-" }}</td>
+            <td>
+              <form method="post" action="/approvals/review" style="display:inline">
+                <input type="hidden" name="req_id" value="{{ r['id'] }}">
+                <button type="submit" name="action" value="approve" class="link-btn approve">承認</button>
+                <button type="submit" name="action" value="reject" class="link-btn cancel">却下</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">承認待ちの申請はありません</p>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>

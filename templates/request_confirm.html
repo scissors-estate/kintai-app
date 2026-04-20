@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申請内容確認 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container">
+  <div class="card">
+    <h2 class="section-title">申請内容の確認</h2>
+    <p style="color:#555; font-size:14px; margin-bottom:16px;">
+      以下の内容で申請します。よろしければ「確定する」を押してください。
+    </p>
+
+    <div class="confirm-box">
+      <div class="confirm-row"><span>種別</span><strong>{{ type_label }}</strong></div>
+      <div class="confirm-row"><span>対象日</span><strong>{{ form.target_date }}</strong></div>
+
+      {% if form.req_type == "half_leave" and form.half_period %}
+      <div class="confirm-row"><span>午前／午後</span><strong>{{ form.half_period }}</strong></div>
+      <div class="confirm-row"><span>種類</span><strong>
+        {% if form.leave_kind == "unpaid" %}公休（無給）{% else %}有給（0.5日消化）{% endif %}
+      </strong></div>
+      {% endif %}
+
+      {% if form.req_type == "delay" and form.delay_minutes %}
+      <div class="confirm-row"><span>遅延時間</span><strong>{{ form.delay_minutes }}分</strong></div>
+      {% endif %}
+
+      {% if form.req_type == "extra_work" %}
+      <div class="confirm-row"><span>開始時刻</span><strong>{{ form.start_time }}</strong></div>
+      <div class="confirm-row"><span>終了時刻</span><strong>{{ form.end_time }}</strong></div>
+      {% endif %}
+
+      {% if form.req_type == "punch_fix" %}
+      <div class="confirm-row"><span>出勤</span><strong>{{ form.fix_clock_in or "-" }}</strong></div>
+      <div class="confirm-row"><span>休憩開始</span><strong>{{ form.fix_break_in or "-" }}</strong></div>
+      <div class="confirm-row"><span>休憩終了</span><strong>{{ form.fix_break_out or "-" }}</strong></div>
+      <div class="confirm-row"><span>退勤</span><strong>{{ form.fix_clock_out or "-" }}</strong></div>
+      {% endif %}
+
+      {% if form.req_type == "transport" %}
+      <div class="confirm-row"><span>区間</span><strong>{{ form.transport_route }}</strong></div>
+      <div class="confirm-row"><span>金額</span><strong>¥{{ form.transport_amount }}</strong></div>
+      {% endif %}
+
+      {% if form.note %}
+      <div class="confirm-row"><span>メモ</span><strong>{{ form.note }}</strong></div>
+      {% endif %}
+    </div>
+
+    <div class="confirm-buttons">
+      <a href="/requests" class="btn-cancel">戻る</a>
+
+      <form method="post" action="/requests/create" style="display:inline">
+        {% for k, v in form.items() %}
+        <input type="hidden" name="{{ k }}" value="{{ v }}">
+        {% endfor %}
+        <button type="submit" class="btn-submit">確定する</button>
+      </form>
+    </div>
+  </div>
+</main>
+</body>
+</html>

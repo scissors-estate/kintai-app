@@ -1,0 +1,748 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap');
+
+/* ============================================
+   カラーパレット
+   - ダークティール #124C6B（メイン・多め）
+   - ライム        #DEF190（アクセント）
+   - 白 / ライトグレー（背景）
+============================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Shippori Mincho", -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  background: #f4f6f8;
+  color: #222;
+  line-height: 1.6;
+}
+
+/* --- ログイン画面 --- */
+.login-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #124C6B 0%, #0a3249 100%);
+  padding: 20px;
+}
+
+.login-card {
+  background: #fff;
+  padding: 40px 32px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  border-top: 6px solid #DEF190;
+}
+
+.login-card h1 {
+  text-align: center;
+  color: #124C6B;
+  margin-bottom: 8px;
+  font-family: "Playfair Display", sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.login-card label {
+  display: block;
+  font-size: 13px;
+  color: #124C6B;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccd4dc;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.login-card input:focus {
+  outline: none;
+  border-color: #124C6B;
+  box-shadow: 0 0 0 3px rgba(18,76,107,0.15);
+}
+
+.login-card button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 24px;
+  background: #124C6B;
+  color: #DEF190;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+}
+
+.login-card button:hover { background: #0a3249; }
+
+.error {
+  background: #fee;
+  color: #c33;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.hint {
+  margin-top: 24px;
+  padding: 12px;
+  background: #f4f6f8;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.8;
+  border-left: 3px solid #DEF190;
+}
+
+/* --- ヘッダー --- */
+.topbar {
+  background: #124C6B;
+  border-bottom: 3px solid #DEF190;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.topbar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  font-family: "Playfair Display", "Shippori Mincho", serif;
+  font-weight: 600;
+  color: #DEF190;
+  font-size: 20px;
+  letter-spacing: 3px;
+}
+
+.user { font-size: 13px; color: #e8eef3; }
+.user a {
+  color: #DEF190;
+  margin-left: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.user a:hover { text-decoration: underline; }
+
+/* --- タブ --- */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(18,76,107,0.08);
+  border: 1px solid #e3e9ee;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 14px;
+  color: #555;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.tab:hover { background: #f4f6f8; }
+
+.tab.active {
+  background: #124C6B;
+  color: #DEF190;
+}
+
+/* --- カード --- */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(18,76,107,0.08);
+  border: 1px solid #e3e9ee;
+}
+
+.center { text-align: center; }
+
+/* --- 打刻画面 --- */
+.today { color: #777; font-size: 14px; }
+.clock {
+  font-family: "Playfair Display", sans-serif;
+  font-size: 60px;
+  font-weight: 700;
+  color: #124C6B;
+  letter-spacing: 3px;
+  margin: 8px 0 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.punch-status {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.status-item {
+  flex: 1;
+  background: #f4f6f8;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #e3e9ee;
+}
+
+.status-item .label {
+  display: block;
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.status-item .value {
+  font-family: "Playfair Display", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #124C6B;
+  font-variant-numeric: tabular-nums;
+}
+
+.punch-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  flex: 1;
+  padding: 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+  font-family: inherit;
+  letter-spacing: 1px;
+}
+
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(18,76,107,0.25); }
+
+.btn-in {
+  background: #DEF190;
+  color: #124C6B;
+}
+.btn-in:hover:not(:disabled) { background: #cae87e; }
+
+.btn-out {
+  background: #124C6B;
+  color: #DEF190;
+}
+.btn-out:hover:not(:disabled) { background: #0a3249; }
+
+.btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+
+/* --- 月次ナビ --- */
+.month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.month-nav h2 {
+  font-family: "Playfair Display", sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 22px;
+  color: #124C6B;
+}
+
+.nav-btn {
+  text-decoration: none;
+  color: #124C6B;
+  font-size: 14px;
+  padding: 6px 10px;
+  font-weight: 700;
+}
+
+.nav-btn:hover { color: #0a3249; }
+
+.summary {
+  background: #f4f6f8;
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.summary strong {
+  font-size: 20px;
+  color: #124C6B;
+  font-family: "Playfair Display", sans-serif;
+}
+
+.table-wrap { overflow-x: auto; }
+
+.kintai-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.kintai-table th, .kintai-table td {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid #e3e9ee;
+}
+
+.kintai-table th {
+  background: #124C6B;
+  color: #DEF190;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.kintai-table td { font-variant-numeric: tabular-nums; color: #333; }
+.kintai-table tbody tr:hover { background: #f4f6f8; }
+
+.empty { text-align: center; color: #777; padding: 40px 0; }
+
+/* --- 休憩ボタン --- */
+.break-buttons {
+  margin-top: 12px;
+  display: flex;
+}
+
+.btn-break {
+  flex: 1;
+  background: #fff;
+  color: #124C6B;
+  border: 2px solid #124C6B;
+  padding: 12px;
+  font-size: 15px;
+}
+.btn-break:hover:not(:disabled) { background: #f4f6f8; }
+.btn-break:disabled { border-color: #e5e5e5; color: #aaa; background: #f5f5f5; }
+
+.btn-break-end {
+  flex: 1;
+  background: #DEF190;
+  color: #124C6B;
+  padding: 14px;
+  font-size: 15px;
+  border: none;
+}
+.btn-break-end:hover { background: #cae87e; }
+
+/* --- 月次サマリーグリッド --- */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summary-grid.four { grid-template-columns: repeat(4, 1fr); }
+
+.summary-box {
+  background: #124C6B;
+  padding: 14px 12px;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.summary-box span {
+  display: block;
+  font-size: 12px;
+  color: #DEF190;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.summary-box strong {
+  font-family: "Playfair Display", sans-serif;
+  font-size: 19px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.summary-box.overtime {
+  background: #fff;
+  border: 2px solid #124C6B;
+}
+.summary-box.overtime span { color: #124C6B; }
+.summary-box.overtime strong { color: #124C6B; }
+
+.summary-box.leave {
+  background: #DEF190;
+}
+.summary-box.leave span { color: #124C6B; }
+.summary-box.leave strong { color: #124C6B; }
+
+/* --- 残業セル --- */
+.kintai-table td.ot { color: #124C6B; font-weight: 700; background: #f0f6dc; }
+
+/* --- セクションタイトル --- */
+.section-title {
+  font-family: "Playfair Display", sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 17px;
+  color: #124C6B;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #DEF190;
+  letter-spacing: 0.3px;
+}
+
+.container .card + .card { margin-top: 16px; }
+
+/* --- 有給フォーム --- */
+.leave-form label {
+  display: block;
+  font-size: 13px;
+  color: #124C6B;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.leave-form input[type="date"],
+.leave-form input[type="text"],
+.leave-form input[type="password"],
+.leave-form input[type="time"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccd4dc;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.leave-form input:focus {
+  outline: none;
+  border-color: #124C6B;
+  box-shadow: 0 0 0 3px rgba(18,76,107,0.15);
+}
+
+.btn-submit {
+  margin-top: 16px;
+  padding: 12px 28px;
+  background: #124C6B;
+  color: #DEF190;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+}
+
+.btn-submit:hover { background: #0a3249; }
+
+/* --- 有給行 --- */
+.row-leave { background: #f9fde8; }
+
+.leave-tag {
+  display: inline-block;
+  background: #DEF190;
+  color: #124C6B;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+/* --- CSVボタン --- */
+.csv-bar {
+  text-align: right;
+  margin-bottom: 12px;
+}
+
+.csv-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #DEF190;
+  color: #124C6B;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.csv-btn:hover { background: #cae87e; }
+.csv-btn.small { padding: 6px 12px; font-size: 12px; margin-left: 8px; }
+
+/* --- 管理者画面 --- */
+.container.wide { max-width: 960px; }
+
+.today-label { color: #777; font-size: 14px; }
+
+.breadcrumb { margin-bottom: 12px; }
+.breadcrumb a {
+  color: #124C6B;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+.breadcrumb a:hover { text-decoration: underline; }
+
+.name {
+  font-weight: 700;
+  color: #124C6B;
+  text-align: left;
+  padding-left: 14px !important;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-working { background: #DEF190; color: #124C6B; }
+.status-break { background: #fff; color: #124C6B; border: 1px solid #124C6B; }
+.status-done { background: #124C6B; color: #DEF190; }
+.status-off { background: #e5e7eb; color: #777; }
+
+/* --- リンクボタン --- */
+.link-btn {
+  display: inline-block;
+  padding: 5px 12px;
+  background: #124C6B;
+  color: #DEF190;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.link-btn:hover { background: #0a3249; }
+
+.link-btn.approve { background: #DEF190; color: #124C6B; margin-right: 4px; }
+.link-btn.approve:hover { background: #cae87e; }
+.link-btn.cancel {
+  background: #fff;
+  color: #124C6B;
+  border: 1px solid #124C6B;
+}
+.link-btn.cancel:hover { background: #f4f6f8; }
+
+.badge-count {
+  display: inline-block;
+  background: #DEF190;
+  color: #124C6B;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+/* --- 有給設定 --- */
+.inline-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.num-input {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid #ccd4dc;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  font-family: inherit;
+}
+
+/* --- フラッシュ --- */
+.flash {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.flash.success {
+  background: #f9fde8;
+  color: #124C6B;
+  border: 1px solid #DEF190;
+  border-left: 4px solid #DEF190;
+}
+
+.flash.error {
+  background: #fff4f2;
+  color: #991b1b;
+  border: 1px solid #f3c8c8;
+  border-left: 4px solid #c33;
+}
+
+/* --- 従業員追加フォーム --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.form-grid input, .form-grid select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccd4dc;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-grid input:focus, .form-grid select:focus {
+  outline: none;
+  border-color: #124C6B;
+  box-shadow: 0 0 0 3px rgba(18,76,107,0.15);
+}
+
+.form-grid label {
+  display: block;
+  font-size: 13px;
+  color: #124C6B;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* --- 申請確認画面 --- */
+.confirm-box {
+  background: #f4f6f8;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-left: 4px solid #124C6B;
+}
+
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #dde3ea;
+}
+
+.confirm-row:last-child { border-bottom: none; }
+
+.confirm-row span {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.confirm-row strong {
+  color: #124C6B;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  padding: 12px 28px;
+  background: #fff;
+  color: #124C6B;
+  border: 2px solid #124C6B;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-family: inherit;
+}
+
+.btn-cancel:hover { background: #f4f6f8; }
+
+/* --- 申請フォームの動的フィールド --- */
+.dynamic-fields { display: none; padding-top: 4px; }
+
+.leave-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccd4dc;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #fff;
+}
+
+.leave-form select:focus {
+  outline: none;
+  border-color: #124C6B;
+  box-shadow: 0 0 0 3px rgba(18,76,107,0.15);
+}
+
+/* --- スマホ対応 --- */
+@media (max-width: 480px) {
+  .clock { font-size: 46px; letter-spacing: 2px; }
+  .container { padding: 12px; }
+  .card { padding: 18px; }
+  .topbar-inner { padding: 12px 14px; }
+  .brand { font-size: 18px; }
+  .btn { font-size: 16px; padding: 18px; }
+  .month-nav h2 { font-size: 18px; }
+  .kintai-table { font-size: 12px; }
+  .kintai-table th, .kintai-table td { padding: 8px 3px; }
+  .summary-box strong { font-size: 15px; }
+  .punch-status { flex-wrap: wrap; }
+  .status-item { min-width: 30%; }
+  .status-badge { font-size: 11px; padding: 3px 7px; }
+  .summary-grid.four { grid-template-columns: repeat(2, 1fr); }
+  .tab { font-size: 13px; padding: 12px 6px; }
+  .form-grid { grid-template-columns: 1fr; }
+}

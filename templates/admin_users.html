@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>従業員管理 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  <nav class="tabs">
+    <a href="/admin" class="tab">勤怠一覧</a>
+    <a href="/approvals" class="tab">承認</a>
+    <a href="/admin/transport" class="tab">交通費</a>
+    <a href="/admin/users" class="tab active">従業員</a>
+    <a href="/admin/departments" class="tab">部署</a>
+    <a href="/admin/holidays" class="tab">特別休日</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  {% if flash %}<div class="flash success">{{ flash }}</div>{% endif %}
+
+  <div class="card">
+    <h2 class="section-title">従業員一覧</h2>
+
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr>
+            <th>氏名</th>
+            <th>ID</th>
+            <th>部署・承認者</th>
+            <th>勤務区分・定時・自動休憩</th>
+            <th>有給(付/取/残)</th>
+            <th>日数</th>
+            <th>削除</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td class="name">
+              {{ r.name }}
+              {% if r.is_approver %}<span class="leave-tag">承認者</span>{% endif %}
+            </td>
+            <td style="color:#888; font-size:13px">{{ r.login_id }}</td>
+            <td>
+              <form method="post" action="/admin/users/assign" class="inline-form" style="flex-wrap:wrap; gap:4px">
+                <input type="hidden" name="user_id" value="{{ r.id }}">
+                <select name="department_id" class="num-input" style="width:110px">
+                  <option value="">（未所属）</option>
+                  {% for d in departments %}
+                  <option value="{{ d['id'] }}" {% if r.department_id == d['id'] %}selected{% endif %}>
+                    {{ d["name"] }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <label style="font-size:12px; display:flex; align-items:center; gap:2px; color:#124C6B">
+                  <input type="checkbox" name="is_approver" {% if r.is_approver %}checked{% endif %}>
+                  承認者
+                </label>
+                <button type="submit" class="link-btn">保存</button>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="/admin/users/profile" class="inline-form" style="flex-wrap:wrap; gap:4px">
+                <input type="hidden" name="user_id" value="{{ r.id }}">
+                <select name="emp_type" class="num-input" style="width:110px">
+                  {% for k, v in emp_types.items() %}
+                  <option value="{{ k }}" {% if r.emp_type == k %}selected{% endif %}>{{ v }}</option>
+                  {% endfor %}
+                </select>
+                <input type="time" name="scheduled_start" value="{{ r.scheduled_start }}" class="num-input" style="width:75px">
+                <span style="font-size:11px">〜</span>
+                <input type="time" name="scheduled_end" value="{{ r.scheduled_end }}" class="num-input" style="width:75px">
+                <input type="number" name="auto_break_minutes" value="{{ r.auto_break_minutes }}" min="0" max="300" class="num-input" style="width:55px" title="自動控除休憩(分)">
+                <button type="submit" class="link-btn">保存</button>
+              </form>
+            </td>
+            <td style="font-size:13px">
+              {{ r.granted }} / {{ r.used }} / <strong>{{ r.remaining }}</strong>
+            </td>
+            <td>
+              <form method="post" action="/admin/users/update" class="inline-form">
+                <input type="hidden" name="user_id" value="{{ r.id }}">
+                <input type="number" name="leave_days" value="{{ r.granted }}" min="0" max="99" class="num-input">
+                <button type="submit" class="link-btn">更新</button>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="/admin/users/delete" style="display:inline"
+                    onsubmit="return confirm('{{ r.name }}を削除しますか？');">
+                <input type="hidden" name="user_id" value="{{ r.id }}">
+                <button type="submit" class="link-btn cancel">削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:11px; color:#888; margin-top:10px;">
+      ※ 現場アルバイトは定時・自動休憩は不要（空欄／0でOK）。計算は30分単位切り捨て。<br>
+      ※ 社員／本社アルバイトは定時と自動休憩(分)を設定。早出切り捨て・定時以降は残業扱い。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">従業員を追加</h2>
+    <form method="post" action="/admin/users/create" class="leave-form">
+      <div class="form-grid">
+        <div>
+          <label>氏名</label>
+          <input type="text" name="name" required>
+        </div>
+        <div>
+          <label>ログインID（半角英数）</label>
+          <input type="text" name="login_id" pattern="[A-Za-z0-9_]+" required>
+        </div>
+        <div>
+          <label>初期パスワード（4文字以上）</label>
+          <input type="text" name="password" minlength="4" required>
+        </div>
+        <div>
+          <label>有給付与日数</label>
+          <input type="number" name="leave_days" value="10" min="0" max="99">
+        </div>
+        <div>
+          <label>権限</label>
+          <select name="role">
+            <option value="employee" selected>従業員</option>
+            <option value="admin">管理者</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">追加する</button>
+      <p style="font-size:12px; color:#777; margin-top:8px">※部署・勤務区分は追加後に一覧から設定してください</p>
+    </form>
+  </div>
+</main>
+</body>
+</html>

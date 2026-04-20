@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>打刻修正 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container">
+  <div class="breadcrumb">
+    <a href="/admin/user/{{ target['id'] }}">← {{ target["name"] }}の月次に戻る</a>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">打刻修正：{{ target["name"] }} / {{ day }}</h2>
+
+    {% if punches %}
+    <div style="margin-bottom:14px; padding:10px; background:#f4f6f9; border-radius:8px; font-size:13px;">
+      <strong>現在の打刻：</strong>
+      {% for p in punches %}
+        {{ p.type_label }} {{ p.time }}{% if not loop.last %} / {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/admin/edit/{{ target['id'] }}/{{ day }}" class="leave-form">
+      <p style="font-size:13px; color:#666; margin-bottom:12px;">
+        空欄にすると打刻を削除します。HH:MM形式で入力してください。
+      </p>
+
+      <label>出勤時刻</label>
+      <input type="time" name="clock_in"
+             value="{% for p in punches if p.type == 'in' %}{{ p.time }}{% endfor %}">
+
+      <label>休憩開始</label>
+      <input type="time" name="break_in"
+             value="{% for p in punches if p.type == 'break_in' %}{{ p.time }}{% endfor %}">
+
+      <label>休憩終了</label>
+      <input type="time" name="break_out"
+             value="{% for p in punches if p.type == 'break_out' %}{{ p.time }}{% endfor %}">
+
+      <label>退勤時刻</label>
+      <input type="time" name="clock_out"
+             value="{% for p in punches if p.type == 'out' %}{{ p.time }}{% endfor %}">
+
+      <button type="submit" class="btn-submit">保存</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理者画面 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  <nav class="tabs">
+    <a href="/admin" class="tab active">勤怠一覧</a>
+    <a href="/approvals" class="tab">
+      承認{% if pending_count %} <span class="badge-count">{{ pending_count }}</span>{% endif %}
+    </a>
+    <a href="/admin/transport" class="tab">交通費</a>
+    <a href="/admin/users" class="tab">従業員</a>
+    <a href="/admin/departments" class="tab">部署</a>
+    <a href="/admin/holidays" class="tab">特別休日</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  <div class="card">
+    <div class="month-nav">
+      <h2>本日の勤怠状況</h2>
+      <div>
+        <span class="today-label">{{ today }}</span>
+      </div>
+    </div>
+
+    <form id="csvForm" action="/admin/csv" method="get" style="margin-bottom:10px; display:flex; gap:8px; align-items:center;">
+      <button type="button" onclick="toggleAll()" class="link-btn">全選択/解除</button>
+      <button type="submit" class="csv-btn small">📥 選択者の今月CSV</button>
+      <span id="selCount" style="font-size:12px; color:#666"></span>
+    </form>
+
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="allChk" onchange="toggleAll()"></th>
+            <th>氏名</th>
+            <th>状態</th>
+            <th>出勤</th>
+            <th>退勤</th>
+            <th>勤務</th>
+            <th>残業</th>
+            <th>詳細</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><input type="checkbox" class="userChk" value="{{ r.id }}" onchange="updateIds()"></td>
+            <td class="name">{{ r.name }}</td>
+            <td><span class="status-badge {{ r.status_class }}">{{ r.status }}</span></td>
+            <td>{{ r.clock_in }}</td>
+            <td>{{ r.clock_out }}</td>
+            <td>{{ r.worked }}</td>
+            <td class="{% if r.overtime != '-' %}ot{% endif %}">{{ r.overtime }}</td>
+            <td><a href="/admin/user/{{ r.id }}" class="link-btn">月次</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <input type="hidden" id="userIdsInput" name="user_ids" form="csvForm">
+
+<script>
+function updateIds() {
+  const ids = Array.from(document.querySelectorAll('.userChk:checked')).map(c => c.value);
+  document.getElementById('userIdsInput').value = ids.join(',');
+  document.getElementById('selCount').textContent = ids.length ? `${ids.length}名選択中` : '未選択 → 全員CSV';
+}
+function toggleAll() {
+  const boxes = document.querySelectorAll('.userChk');
+  const anyUn = Array.from(boxes).some(b => !b.checked);
+  boxes.forEach(b => b.checked = anyUn);
+  document.getElementById('allChk').checked = anyUn;
+  updateIds();
+}
+updateIds();
+</script>
+  </div>
+</main>
+</body>
+</html>

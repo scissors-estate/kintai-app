@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部署管理 - 勤怠管理</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">勤怠管理（管理者）</span>
+    <span class="user">{{ user["name"] }}さん <a href="/logout">ログアウト</a></span>
+  </div>
+</header>
+
+<main class="container wide">
+  <nav class="tabs">
+    <a href="/admin" class="tab">勤怠一覧</a>
+    <a href="/approvals" class="tab">承認</a>
+    <a href="/admin/transport" class="tab">交通費</a>
+    <a href="/admin/users" class="tab">従業員</a>
+    <a href="/admin/departments" class="tab active">部署</a>
+    <a href="/admin/holidays" class="tab">特別休日</a>
+    <a href="/settings" class="tab">設定</a>
+  </nav>
+
+  {% if flash %}
+  <div class="flash success">{{ flash }}</div>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="section-title">部署一覧</h2>
+
+    <div class="table-wrap">
+      <table class="kintai-table">
+        <thead>
+          <tr>
+            <th>部署名</th>
+            <th>承認者</th>
+            <th>名称変更</th>
+            <th>削除</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td class="name">{{ r.name }}</td>
+            <td>{{ r.approver_name }}</td>
+            <td>
+              <form method="post" action="/admin/departments/rename" class="inline-form">
+                <input type="hidden" name="dep_id" value="{{ r.id }}">
+                <input type="text" name="name" value="{{ r.name }}" class="num-input" style="width:140px">
+                <button type="submit" class="link-btn">変更</button>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="/admin/departments/delete" style="display:inline"
+                    onsubmit="return confirm('{{ r.name }}を削除しますか？所属従業員は未所属になります。');">
+                <input type="hidden" name="dep_id" value="{{ r.id }}">
+                <button type="submit" class="link-btn cancel">削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">部署を追加</h2>
+    <form method="post" action="/admin/departments/create" class="leave-form">
+      <label>部署名</label>
+      <input type="text" name="name" required>
+      <button type="submit" class="btn-submit">追加する</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>
