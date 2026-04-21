@@ -7,11 +7,23 @@ from starlette.middleware.sessions import SessionMiddleware
 from datetime import datetime, date, time, timedelta
 from collections import defaultdict
 from pathlib import Path
+from zoneinfo import ZoneInfo
 import csv
 import io
 
 import jpholiday
 import database as db
+
+JST = ZoneInfo("Asia/Tokyo")
+
+
+def now_jst() -> datetime:
+    """日本時間の現在時刻（naive）"""
+    return datetime.now(JST).replace(tzinfo=None)
+
+
+def today_jst() -> date:
+    return datetime.now(JST).date()
 
 BASE_DIR = Path(__file__).parent
 
@@ -411,12 +423,12 @@ def dashboard(request: Request):
         return RedirectResponse("/login", 303)
 
     today_punches = db.get_today_punches(user["id"])
-    s = calc_day_summary(today_punches, user=user, day_date=date.today())
+    s = calc_day_summary(today_punches, user=user, day_date=today_jst())
 
     return templates.TemplateResponse(request, "dashboard.html", {
         "user": user,
-        "today": date.today().strftime("%Y年%m月%d日"),
-        "now": datetime.now().strftime("%H:%M"),
+        "today": today_jst().strftime("%Y年%m月%d日"),
+        "now": now_jst().strftime("%H:%M"),
         "clock_in": s["clock_in"].strftime("%H:%M") if s["clock_in"] else None,
         "clock_out": s["clock_out"].strftime("%H:%M") if s["clock_out"] else None,
         "break_text": fmt_hm(s["break_minutes"]),
@@ -442,7 +454,7 @@ def monthly(request: Request, year: int = None, month: int = None):
     if not user:
         return RedirectResponse("/login", 303)
 
-    today = date.today()
+    today = today_jst()
     year = year or today.year
     month = month or today.month
     data = build_monthly_rows(user["id"], year, month)
@@ -484,7 +496,7 @@ def requests_page(request: Request):
         "granted": user["leave_days"],
         "used": used,
         "remaining": remaining,
-        "today": date.today().isoformat(),
+        "today": today_jst().isoformat(),
     })
 
 
@@ -580,7 +592,7 @@ def monthly_csv(request: Request, year: int = None, month: int = None):
     if not user:
         return RedirectResponse("/login", 303)
 
-    today = date.today()
+    today = today_jst()
     year = year or today.year
     month = month or today.month
     data = build_monthly_rows(user["id"], year, month)
@@ -625,7 +637,7 @@ def admin(request: Request):
     rows = []
     for u in users:
         punches = db.get_today_punches(u["id"])
-        s = calc_day_summary(punches, user=u, day_date=date.today())
+        s = calc_day_summary(punches, user=u, day_date=today_jst())
         if s["clock_in"] and s["clock_out"]:
             status, sc = "退勤済", "status-done"
         elif s["clock_in"] and s["break_ongoing"]:
@@ -647,7 +659,7 @@ def admin(request: Request):
 
     return templates.TemplateResponse(request, "admin.html", {
         "user": user,
-        "today": date.today().strftime("%Y年%m月%d日"),
+        "today": today_jst().strftime("%Y年%m月%d日"),
         "rows": rows,
         "pending_count": pending_count,
     })
@@ -663,7 +675,7 @@ def admin_user_monthly(request: Request, user_id: int, year: int = None, month: 
     if not target:
         raise HTTPException(404)
 
-    today = date.today()
+    today = today_jst()
     year = year or today.year
     month = month or today.month
     data = build_monthly_rows(user_id, year, month)
@@ -802,7 +814,7 @@ def admin_transport_csv(request: Request, year: int = None, month: int = None):
     user = require_admin(request)
     if not user:
         return RedirectResponse("/login", 303)
-    today = date.today()
+    today = today_jst()
     year = year or today.year
     month = month or today.month
     rows = db.get_transport_expenses_in_month(year, month)
@@ -824,7 +836,7 @@ def admin_transport(request: Request, year: int = None, month: int = None):
     if not user:
         return RedirectResponse("/login", 303)
 
-    today = date.today()
+    today = today_jst()
     year = year or today.year
     month = month or today.month
     rows = db.get_transport_expenses_in_month(year, month)
@@ -1042,7 +1054,7 @@ def admin_csv(request: Request, year: int = None, month: int = None, user_ids: s
     if not user:
         return RedirectResponse("/login", 303)
 
-    today = date.today()
+    today = today_jst()
     year = year or today.year
     month = month or today.month
 

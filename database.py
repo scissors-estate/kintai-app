@@ -2,8 +2,18 @@
 import sqlite3
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 DB_PATH = Path(__file__).parent / "kintai.db"
+JST = ZoneInfo("Asia/Tokyo")
+
+
+def _now_jst_iso():
+    return datetime.now(JST).replace(tzinfo=None).isoformat(timespec="seconds")
+
+
+def _today_jst_str():
+    return datetime.now(JST).strftime("%Y-%m-%d")
 
 
 def get_conn():
@@ -368,14 +378,14 @@ def add_punch(user_id: int, punch_type: str):
     conn = get_conn()
     conn.execute(
         "INSERT INTO punches (user_id, punch_type, punched_at) VALUES (?,?,?)",
-        (user_id, punch_type, datetime.now().isoformat(timespec="seconds"))
+        (user_id, punch_type, _now_jst_iso())
     )
     conn.commit()
     conn.close()
 
 
 def get_today_punches(user_id: int):
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = _today_jst_str()
     conn = get_conn()
     rows = conn.execute(
         "SELECT * FROM punches WHERE user_id=? AND punched_at LIKE ? ORDER BY punched_at",
@@ -456,7 +466,7 @@ def create_request(user_id: int, req_type: str, target_date: str, note: str = ""
             transport_route, transport_amount, leave_kind)
            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (user_id, req_type, target_date, "pending",
-         datetime.now().isoformat(timespec="seconds"), note,
+         _now_jst_iso(), note,
          half_period, delay_minutes, start_time, end_time,
          fix_clock_in, fix_clock_out, fix_break_in, fix_break_out,
          transport_route, transport_amount, leave_kind)
@@ -526,7 +536,7 @@ def review_request(req_id: int, reviewer_id: int, status: str):
     conn = get_conn()
     conn.execute(
         "UPDATE requests SET status=?, reviewer_id=?, reviewed_at=? WHERE id=?",
-        (status, reviewer_id, datetime.now().isoformat(timespec="seconds"), req_id)
+        (status, reviewer_id, _now_jst_iso(), req_id)
     )
     conn.commit()
     conn.close()
@@ -605,7 +615,7 @@ def add_leave_request(user_id: int, leave_date: str, note: str = ""):
         """INSERT INTO leaves (user_id, leave_date, status, requested_at, note)
            VALUES (?,?,?,?,?)""",
         (user_id, leave_date, "pending",
-         datetime.now().isoformat(timespec="seconds"), note)
+         _now_jst_iso(), note)
     )
     conn.commit()
     conn.close()
@@ -660,7 +670,7 @@ def update_leave_status(leave_id: int, status: str):
     conn = get_conn()
     conn.execute(
         "UPDATE leaves SET status=?, reviewed_at=? WHERE id=?",
-        (status, datetime.now().isoformat(timespec="seconds"), leave_id)
+        (status, _now_jst_iso(), leave_id)
     )
     conn.commit()
     conn.close()
