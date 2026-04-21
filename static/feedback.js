@@ -122,6 +122,15 @@
         const style = (typeof optsOrFn === "function")
           ? optsOrFn(e) : (optsOrFn || {});
 
+        // 押されたボタンの name/value を隠しフィールドで確実に送信
+        if (e.submitter && e.submitter.name) {
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.name = e.submitter.name;
+          hidden.value = e.submitter.value;
+          form.appendChild(hidden);
+        }
+
         vibrate(style.vibe);
         if (typeof style.sound === "function") style.sound();
         if (style.confetti) confettiBurst();
