@@ -71,9 +71,29 @@
   </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="/static/feedback.js"></script>
 <script>
-  attachFeedback('#submitReqForm', { mark: "✓", msg: "申請しました" });
+  attachFeedback('#submitReqForm', {
+    theme: "submit", animation: "pop", font: "font-mincho-italic",
+    mark: "✓", msg: "申請しました",
+    vibe: [60, 30, 60], hold: 700,
+    sound: function() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      [660, 880].forEach((f, i) => {
+        setTimeout(() => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = f;
+          g.gain.setValueAtTime(0.15, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+          o.start(); o.stop(ctx.currentTime + 0.18);
+        }, i * 100);
+      });
+    }
+  });
 </script>
 </body>
 </html>

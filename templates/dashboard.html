@@ -68,6 +68,7 @@
   </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="/static/feedback.js"></script>
 <script>
 function updateClock() {
@@ -78,16 +79,10 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 
-// 打刻ボタン押下時のフィードバック
-const punchMsg = {
-  in: "出勤しました",
-  out: "退勤しました",
-  break_in: "休憩開始",
-  break_out: "休憩終了"
-};
+// 打刻ボタン押下時：アクションに応じた演出
 attachFeedback('form[action="/punch"]', function(e) {
-  const v = e.submitter && e.submitter.value;
-  return { mark: "✓", msg: punchMsg[v] || "完了" };
+  const type = e.submitter && e.submitter.value;
+  return styleForPunch(type);
 });
 </script>
 </body>

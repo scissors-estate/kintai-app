@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Shippori+Mincho:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Shippori+Mincho:wght@400;500;600;700;800&family=Klee+One:wght@400;600&family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
 
-/* --- フィードバックオーバーレイ（打刻/申請時） --- */
+/* --- フィードバックオーバーレイ --- */
 .feedback-overlay {
   position: fixed;
   inset: 0;
@@ -8,37 +8,149 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(18, 76, 107, 0.95);
-  color: #DEF190;
   z-index: 9999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s ease;
+  padding: 20px;
+  text-align: center;
 }
 
-.feedback-overlay.show {
-  opacity: 1;
-  animation: fb-pop 0.4s ease;
-}
+.feedback-overlay.show { opacity: 1; }
 
 .feedback-overlay .mark {
-  font-size: 140px;
+  font-size: 120px;
   line-height: 1;
-  font-family: "Playfair Display", serif;
-  font-weight: 900;
+  margin-bottom: 6px;
 }
 
 .feedback-overlay .msg {
-  font-size: 22px;
-  margin-top: 12px;
-  letter-spacing: 3px;
-  font-weight: 600;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  line-height: 1.4;
 }
 
+/* ==== カラーテーマ別背景 ==== */
+.feedback-overlay.theme-morning {
+  background: linear-gradient(160deg, #fff4cc 0%, #ffd88a 60%, #ff9d6b 100%);
+  color: #5a3a1a;
+}
+.feedback-overlay.theme-noon {
+  background: linear-gradient(160deg, #DEF190 0%, #9bcf5e 100%);
+  color: #1E3A5F;
+}
+.feedback-overlay.theme-evening {
+  background: linear-gradient(160deg, #ffb99a 0%, #d67796 60%, #6d4e7e 100%);
+  color: #fff;
+}
+.feedback-overlay.theme-night {
+  background: linear-gradient(160deg, #1e3a5f 0%, #0a1e38 100%);
+  color: #DEF190;
+}
+.feedback-overlay.theme-leave {
+  background: linear-gradient(135deg, #124C6B 0%, #DEF190 100%);
+  color: #fff;
+}
+.feedback-overlay.theme-break {
+  background: linear-gradient(160deg, #fff5e6 0%, #ffd6a5 100%);
+  color: #6d4c2a;
+}
+.feedback-overlay.theme-resume {
+  background: linear-gradient(160deg, #e0f4ff 0%, #a0d8ef 100%);
+  color: #1E3A5F;
+}
+.feedback-overlay.theme-submit {
+  background: linear-gradient(135deg, #124C6B 0%, #2a6c8f 100%);
+  color: #DEF190;
+}
+
+/* ==== フォント別スタイル ==== */
+.font-mincho { font-family: "Playfair Display", "Shippori Mincho", serif; font-weight: 700; }
+.font-mincho-italic { font-family: "Playfair Display", "Shippori Mincho", serif; font-style: italic; font-weight: 800; }
+.font-maru { font-family: "Zen Maru Gothic", "Klee One", sans-serif; font-weight: 900; }
+.font-klee { font-family: "Klee One", "Shippori Mincho", serif; font-weight: 600; }
+.font-gothic { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; letter-spacing: 6px; }
+
+/* ==== アニメーション：ふわっと降る（朝） ==== */
+.fb-drop .mark, .fb-drop .msg {
+  animation: fb-drop 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.fb-drop .msg { animation-delay: 0.15s; }
+
+@keyframes fb-drop {
+  0%   { opacity: 0; transform: translateY(-40px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0)     scale(1); }
+}
+
+/* ==== アニメーション：ぽわん（休憩開始） ==== */
+.fb-poyon .mark, .fb-poyon .msg {
+  animation: fb-poyon 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.fb-poyon .msg { animation-delay: 0.12s; }
+
+@keyframes fb-poyon {
+  0%   { opacity: 0; transform: scale(0.4); }
+  60%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ==== アニメーション：左からスライド（休憩終了） ==== */
+.fb-slide .mark, .fb-slide .msg {
+  animation: fb-slide 0.6s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+.fb-slide .msg { animation-delay: 0.1s; }
+
+@keyframes fb-slide {
+  0%   { opacity: 0; transform: translateX(-60px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ==== アニメーション：ポップ（申請・一般） ==== */
+.fb-pop .mark, .fb-pop .msg {
+  animation: fb-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.fb-pop .msg { animation-delay: 0.1s; }
+
 @keyframes fb-pop {
-  0%   { transform: scale(0.6); opacity: 0; }
-  40%  { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1);   opacity: 1; }
+  0%   { opacity: 0; transform: scale(0.7) rotate(-3deg); }
+  60%  { opacity: 1; transform: scale(1.08) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* ==== アニメーション：祝福（退勤） ==== */
+.fb-celebrate .mark {
+  animation: fb-celebrate-mark 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.fb-celebrate .msg {
+  animation: fb-celebrate-msg 0.7s ease-out 0.2s both;
+}
+
+@keyframes fb-celebrate-mark {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-20deg); }
+  60%  { opacity: 1; transform: scale(1.3) rotate(5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes fb-celebrate-msg {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 背景のパルス（朝用の光） */
+.feedback-overlay.pulse::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.5), transparent 60%);
+  animation: fb-pulse 1.5s ease-out;
+  pointer-events: none;
+}
+
+@keyframes fb-pulse {
+  0%   { opacity: 0; transform: scale(0.5); }
+  30%  { opacity: 0.8; }
+  100% { opacity: 0; transform: scale(1.8); }
 }
 
 /* ============================================
