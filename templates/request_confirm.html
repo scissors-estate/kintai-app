@@ -61,7 +61,7 @@
     <div class="confirm-buttons">
       <a href="/requests" class="btn-cancel">戻る</a>
 
-      <form method="post" action="/requests/create" style="display:inline">
+      <form method="post" action="/requests/create" id="submitReqForm" style="display:inline">
         {% for k, v in form.items() %}
         <input type="hidden" name="{{ k }}" value="{{ v }}">
         {% endfor %}
@@ -70,5 +70,10 @@
     </div>
   </div>
 </main>
+
+<script src="/static/feedback.js"></script>
+<script>
+  attachFeedback('#submitReqForm', { mark: "✓", msg: "申請しました" });
+</script>
 </body>
 </html>

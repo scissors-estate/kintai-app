@@ -68,6 +68,7 @@
   </div>
 </main>
 
+<script src="/static/feedback.js"></script>
 <script>
 function updateClock() {
   const now = new Date();
@@ -76,6 +77,18 @@ function updateClock() {
   document.getElementById('clock').textContent = h + ':' + m;
 }
 setInterval(updateClock, 1000);
+
+// 打刻ボタン押下時のフィードバック
+const punchMsg = {
+  in: "出勤しました",
+  out: "退勤しました",
+  break_in: "休憩開始",
+  break_out: "休憩終了"
+};
+attachFeedback('form[action="/punch"]', function(e) {
+  const v = e.submitter && e.submitter.value;
+  return { mark: "✓", msg: punchMsg[v] || "完了" };
+});
 </script>
 </body>
 </html>
