@@ -171,10 +171,25 @@
           <span>取得 <strong>{{ r.used }}日</strong></span>
           <span>残 <strong>{{ r.remaining }}日</strong></span>
         </div>
+        {% if r.legal_days is not none %}
+        <div style="margin:8px 0; padding:8px 12px; background:#f0f7ff; border-radius:6px; font-size:13px; display:flex; align-items:center; gap:12px;">
+          <span>📋 法定付与日数：<strong>{{ r.legal_days }}日</strong></span>
+          {% if r.legal_days != r.granted %}
+          <form method="post" action="/admin/users/apply_legal" style="margin:0;">
+            <input type="hidden" name="user_id" value="{{ r.id }}">
+            <button type="submit" class="btn-save" style="padding:4px 12px; font-size:12px;">法定日数を適用</button>
+          </form>
+          {% else %}
+          <span style="color:#4caf50; font-size:12px;">✅ 適用済み</span>
+          {% endif %}
+        </div>
+        {% else %}
+        <div style="margin:8px 0; font-size:12px; color:#999;">※ 入社日を設定すると法定付与日数が表示されます</div>
+        {% endif %}
         <form method="post" action="/admin/users/update" class="emp-form">
           <input type="hidden" name="user_id" value="{{ r.id }}">
           <div class="emp-field">
-            <label>付与日数を変更</label>
+            <label>付与日数を手動変更</label>
             <input type="number" name="leave_days" value="{{ r.granted }}" min="0" max="99" step="0.5">
           </div>
           <button type="submit" class="btn-save">更新</button>

@@ -1031,6 +1031,7 @@ def admin_users(request: Request):
             "auto_break_minutes": u["auto_break_minutes"],
             "hire_date": hire_date,
             "email": email,
+            "legal_days": db.calc_legal_leave_days(hire_date),
         })
     admin_rows = [r for r in rows if db.get_user(r["id"])["role"] == "admin"]
     employee_rows = [r for r in rows if db.get_user(r["id"])["role"] != "admin"]
@@ -1217,6 +1218,22 @@ def admin_users_update(request: Request,
     if not user:
         return RedirectResponse("/login", 303)
     db.update_leave_days(user_id, leave_days)
+    return RedirectResponse("/admin/users", 303)
+
+
+@app.post("/admin/users/apply_legal")
+def admin_users_apply_legal(request: Request, user_id: int = Form(...)):
+    """法定有給日数を適用する"""
+    user = require_admin(request)
+    if not user:
+        return RedirectResponse("/login", 303)
+    target = db.get_user(user_id)
+    legal = db.calc_legal_leave_days(target["hire_date"] if target else None)
+    if legal is not None:
+        db.update_leave_days(user_id, legal)
+        request.session["flash"] = f"法定日数 {legal}日 を適用しました"
+    else:
+        request.session["flash"] = "入社日が未設定、または勤続6ヶ月未満のため適用できません"
     return RedirectResponse("/admin/users", 303)
 
 

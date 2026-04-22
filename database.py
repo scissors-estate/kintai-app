@@ -384,6 +384,27 @@ def verify_password(user_id: int, password: str) -> bool:
     return row is not None
 
 
+def calc_legal_leave_days(hire_date_str: str):
+    """入社日から法定有給付与日数を計算。6ヶ月未満はNone、以降は法定テーブルで返す"""
+    if not hire_date_str:
+        return None
+    from datetime import date
+    try:
+        hire = date.fromisoformat(hire_date_str)
+    except ValueError:
+        return None
+    today = date.today()
+    # 勤続月数
+    months = (today.year - hire.year) * 12 + (today.month - hire.month)
+    if today.day < hire.day:
+        months -= 1
+    if months < 6:
+        return None  # まだ付与なし
+    years_since_first = (months - 6) // 12
+    table = [10, 11, 12, 14, 16, 18, 20]
+    return table[min(years_since_first, len(table) - 1)]
+
+
 def update_leave_days(user_id: int, days: float):
     conn = get_conn()
     conn.execute("UPDATE users SET leave_days=? WHERE id=?", (days, user_id))
