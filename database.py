@@ -330,7 +330,7 @@ def update_user_department(user_id: int, department_id, is_approver: bool):
     conn.close()
 
 
-def create_user(login_id: str, password: str, name: str, role: str, leave_days: int,
+def create_user(login_id: str, password: str, name: str, role: str, leave_days: float,
                 hire_date: str = None, email: str = None):
     conn = get_conn()
     try:
@@ -384,7 +384,7 @@ def verify_password(user_id: int, password: str) -> bool:
     return row is not None
 
 
-def update_leave_days(user_id: int, days: int):
+def update_leave_days(user_id: int, days: float):
     conn = get_conn()
     conn.execute("UPDATE users SET leave_days=? WHERE id=?", (days, user_id))
     conn.commit()

@@ -1037,7 +1037,7 @@ def admin_users_create(request: Request,
                        password: str = Form(...),
                        name: str = Form(...),
                        role: str = Form("employee"),
-                       leave_days: int = Form(10),
+                       leave_days: float = Form(10),
                        hire_date: str = Form(""),
                        email: str = Form("")):
     user = require_admin(request)
@@ -1200,7 +1200,7 @@ def admin_users_assign(request: Request,
 @app.post("/admin/users/update")
 def admin_users_update(request: Request,
                        user_id: int = Form(...),
-                       leave_days: int = Form(...)):
+                       leave_days: float = Form(...)):
     user = require_admin(request)
     if not user:
         return RedirectResponse("/login", 303)
