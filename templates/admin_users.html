@@ -27,8 +27,8 @@
 
   {% if flash %}<div class="flash success">{{ flash }}</div>{% endif %}
 
-  {# ── 共通：1人分の詳細パネル ── #}
-  {% macro emp_detail(r) %}
+  {# ── 管理者用：部署・承認者と削除のみ ── #}
+  {% macro admin_detail(r) %}
   <details class="emp-item">
     <summary class="emp-summary">
       <span class="emp-name">{{ r.name }}</span>
@@ -36,14 +36,9 @@
         <span class="emp-login">{{ r.login_id }}</span>
         <span class="emp-dep">{{ r.department_name }}</span>
         {% if r.is_approver %}<span class="leave-tag">承認者</span>{% endif %}
-        <span class="emp-emp-type">{{ r.emp_type_label }}</span>
-      </span>
-      <span class="emp-leave">
-        有給 <strong>{{ r.remaining }}</strong>日 / {{ r.granted }}
       </span>
       <span class="emp-caret">▼</span>
     </summary>
-
     <div class="emp-detail">
       <!-- 部署・承認者 -->
       <div class="emp-section">
@@ -70,7 +65,60 @@
           <button type="submit" class="btn-save">保存</button>
         </form>
       </div>
+      <!-- 削除 -->
+      <div class="emp-section emp-danger">
+        <form method="post" action="/admin/users/delete"
+              onsubmit="return confirm('{{ r.name }}を削除しますか？');">
+          <input type="hidden" name="user_id" value="{{ r.id }}">
+          <button type="submit" class="btn-danger">このアカウントを削除</button>
+        </form>
+      </div>
+    </div>
+  </details>
+  {% endmacro %}
 
+  {# ── 従業員用：全セクション ── #}
+  {% macro emp_detail(r) %}
+  <details class="emp-item">
+    <summary class="emp-summary">
+      <span class="emp-name">{{ r.name }}</span>
+      <span class="emp-meta">
+        <span class="emp-login">{{ r.login_id }}</span>
+        <span class="emp-dep">{{ r.department_name }}</span>
+        {% if r.is_approver %}<span class="leave-tag">承認者</span>{% endif %}
+        <span class="emp-emp-type">{{ r.emp_type_label }}</span>
+      </span>
+      <span class="emp-leave">
+        有給 <strong>{{ r.remaining }}</strong>日 / {{ r.granted }}
+      </span>
+      <span class="emp-caret">▼</span>
+    </summary>
+    <div class="emp-detail">
+      <!-- 部署・承認者 -->
+      <div class="emp-section">
+        <div class="emp-section-title">部署・承認者</div>
+        <form method="post" action="/admin/users/assign" class="emp-form">
+          <input type="hidden" name="user_id" value="{{ r.id }}">
+          <div class="emp-field">
+            <label>部署</label>
+            <select name="department_id">
+              <option value="">（未所属）</option>
+              {% for d in departments %}
+              <option value="{{ d['id'] }}" {% if r.department_id == d['id'] %}selected{% endif %}>
+                {{ d["name"] }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="emp-field">
+            <label class="emp-check">
+              <input type="checkbox" name="is_approver" {% if r.is_approver %}checked{% endif %}>
+              この部署の承認者にする
+            </label>
+          </div>
+          <button type="submit" class="btn-save">保存</button>
+        </form>
+      </div>
       <!-- 勤務区分・定時・自動休憩 -->
       <div class="emp-section">
         <div class="emp-section-title">勤務区分・定時</div>
@@ -99,7 +147,6 @@
           <button type="submit" class="btn-save">保存</button>
         </form>
       </div>
-
       <!-- 入社日・メールアドレス -->
       <div class="emp-section">
         <div class="emp-section-title">入社日・メールアドレス</div>
@@ -116,7 +163,6 @@
           <button type="submit" class="btn-save">保存</button>
         </form>
       </div>
-
       <!-- 有給 -->
       <div class="emp-section">
         <div class="emp-section-title">有給</div>
@@ -134,7 +180,6 @@
           <button type="submit" class="btn-save">更新</button>
         </form>
       </div>
-
       <!-- 削除 -->
       <div class="emp-section emp-danger">
         <form method="post" action="/admin/users/delete"
@@ -155,7 +200,7 @@
     </p>
     <div class="emp-list">
       {% for r in admin_rows %}
-        {{ emp_detail(r) }}
+        {{ admin_detail(r) }}
       {% endfor %}
     </div>
   </div>
