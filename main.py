@@ -1024,9 +1024,13 @@ def admin_users(request: Request):
             "hire_date": hire_date,
             "email": email,
         })
+    admin_rows = [r for r in rows if db.get_user(r["id"])["role"] == "admin"]
+    employee_rows = [r for r in rows if db.get_user(r["id"])["role"] != "admin"]
     flash = request.session.pop("flash", None)
     return templates.TemplateResponse(request, "admin_users.html", {
-        "user": user, "rows": rows, "flash": flash,
+        "user": user, "rows": rows,
+        "admin_rows": admin_rows, "employee_rows": employee_rows,
+        "flash": flash,
         "departments": deps, "emp_types": db.EMP_TYPES,
     })
 
