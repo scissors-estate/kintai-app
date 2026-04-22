@@ -199,7 +199,7 @@ def get_user(user_id: int):
 def get_all_employees():
     conn = get_conn()
     rows = conn.execute(
-        "SELECT * FROM users WHERE role != 'admin' ORDER BY id"
+        "SELECT * FROM users ORDER BY id"
     ).fetchall()
     conn.close()
     return rows
