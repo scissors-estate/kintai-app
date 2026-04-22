@@ -26,7 +26,16 @@
       <a href="/admin/user/{{ target['id'] }}?year={{ next_y }}&month={{ next_m }}" class="nav-btn">次月 ▶</a>
     </div>
 
+    <div class="csv-bar" style="margin-bottom:12px">
+      <a href="/admin/user/{{ target['id'] }}/print?year={{ year }}&month={{ month }}"
+         class="csv-btn" target="_blank">🖨 印刷 / PDF出力（A4縦）</a>
+    </div>
+
     <div class="summary-grid four">
+      <div class="summary-box">
+        <span>出勤日数</span>
+        <strong>{{ workday_count }}日</strong>
+      </div>
       <div class="summary-box">
         <span>勤務合計</span>
         <strong>{{ total_work }}</strong>
@@ -58,7 +67,6 @@
       </div>
     </div>
 
-    {% if rows %}
     <div class="table-wrap">
       <table class="kintai-table">
         <thead>
@@ -76,20 +84,21 @@
         </thead>
         <tbody>
           {% for r in rows %}
-          <tr class="{% if r.is_leave %}row-leave{% endif %}">
-            <td>{{ r.day }}
+          <tr class="day-row day-{{ r.day_type }}{% if r.is_leave %} row-leave{% endif %}{% if not r.has_data %} row-empty{% endif %}">
+            <td class="day-cell">
+              <span class="day-label">{{ r.day }}</span>
               {% for t in r.tags %}<span class="leave-tag">{{ t }}</span>{% endfor %}
             </td>
-            <td>{{ r.clock_in }}</td>
-            <td>{{ r.clock_out }}</td>
-            <td>{{ r.break }}</td>
-            <td>{{ r.worked }}</td>
-            <td class="{% if r.overtime != '-' %}ot{% endif %}">{{ r.overtime }}</td>
-            <td>{% if r.transport %}¥{{ "{:,}".format(r.transport) }}{% else %}-{% endif %}</td>
+            <td>{{ r.clock_in or "—" }}</td>
+            <td>{{ r.clock_out or "—" }}</td>
+            <td>{{ r.break or "—" }}</td>
+            <td>{{ r.worked or "—" }}</td>
+            <td class="{% if r.overtime %}ot{% endif %}">{{ r.overtime or "—" }}</td>
+            <td>{% if r.transport %}¥{{ "{:,}".format(r.transport) }}{% else %}—{% endif %}</td>
             <td style="text-align:left; font-size:12px; color:#555">
               {% if r.transport_note %}{{ r.transport_note }}{% endif %}
-              {% if r.note %}<br>{{ r.note }}{% endif %}
-              {% if not r.transport_note and not r.note %}-{% endif %}
+              {% if r.note %}{% if r.transport_note %}<br>{% endif %}{{ r.note }}{% endif %}
+              {% if not r.transport_note and not r.note %}—{% endif %}
             </td>
             <td><a href="/admin/edit/{{ target['id'] }}/{{ r.date }}" class="link-btn">編集</a></td>
           </tr>
@@ -97,9 +106,6 @@
         </tbody>
       </table>
     </div>
-    {% else %}
-    <p class="empty">この月の打刻はまだありません</p>
-    {% endif %}
   </div>
 </main>
 </body>

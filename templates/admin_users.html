@@ -29,32 +29,36 @@
 
   <div class="card">
     <h2 class="section-title">従業員一覧</h2>
+    <p class="hint" style="font-size:12px;color:#666;margin-bottom:12px">
+      名前をクリックすると詳細が開きます。
+    </p>
 
-    <div class="table-wrap">
-      <table class="kintai-table">
-        <thead>
-          <tr>
-            <th>氏名</th>
-            <th>ID</th>
-            <th>部署・承認者</th>
-            <th>勤務区分・定時・自動休憩</th>
-            <th>有給(付/取/残)</th>
-            <th>日数</th>
-            <th>削除</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in rows %}
-          <tr>
-            <td class="name">
-              {{ r.name }}
-              {% if r.is_approver %}<span class="leave-tag">承認者</span>{% endif %}
-            </td>
-            <td style="color:#888; font-size:13px">{{ r.login_id }}</td>
-            <td>
-              <form method="post" action="/admin/users/assign" class="inline-form" style="flex-wrap:wrap; gap:4px">
-                <input type="hidden" name="user_id" value="{{ r.id }}">
-                <select name="department_id" class="num-input" style="width:110px">
+    <div class="emp-list">
+      {% for r in rows %}
+      <details class="emp-item">
+        <summary class="emp-summary">
+          <span class="emp-name">{{ r.name }}</span>
+          <span class="emp-meta">
+            <span class="emp-login">{{ r.login_id }}</span>
+            <span class="emp-dep">{{ r.department_name }}</span>
+            {% if r.is_approver %}<span class="leave-tag">承認者</span>{% endif %}
+            <span class="emp-emp-type">{{ r.emp_type_label }}</span>
+          </span>
+          <span class="emp-leave">
+            有給 <strong>{{ r.remaining }}</strong>日 / {{ r.granted }}
+          </span>
+          <span class="emp-caret">▼</span>
+        </summary>
+
+        <div class="emp-detail">
+          <!-- 部署・承認者 -->
+          <div class="emp-section">
+            <div class="emp-section-title">部署・承認者</div>
+            <form method="post" action="/admin/users/assign" class="emp-form">
+              <input type="hidden" name="user_id" value="{{ r.id }}">
+              <div class="emp-field">
+                <label>部署</label>
+                <select name="department_id">
                   <option value="">（未所属）</option>
                   {% for d in departments %}
                   <option value="{{ d['id'] }}" {% if r.department_id == d['id'] %}selected{% endif %}>
@@ -62,52 +66,95 @@
                   </option>
                   {% endfor %}
                 </select>
-                <label style="font-size:12px; display:flex; align-items:center; gap:2px; color:#124C6B">
+              </div>
+              <div class="emp-field">
+                <label class="emp-check">
                   <input type="checkbox" name="is_approver" {% if r.is_approver %}checked{% endif %}>
-                  承認者
+                  この部署の承認者にする
                 </label>
-                <button type="submit" class="link-btn">保存</button>
-              </form>
-            </td>
-            <td>
-              <form method="post" action="/admin/users/profile" class="inline-form" style="flex-wrap:wrap; gap:4px">
-                <input type="hidden" name="user_id" value="{{ r.id }}">
-                <select name="emp_type" class="num-input" style="width:110px">
+              </div>
+              <button type="submit" class="btn-save">保存</button>
+            </form>
+          </div>
+
+          <!-- 勤務区分・定時・自動休憩 -->
+          <div class="emp-section">
+            <div class="emp-section-title">勤務区分・定時</div>
+            <form method="post" action="/admin/users/profile" class="emp-form">
+              <input type="hidden" name="user_id" value="{{ r.id }}">
+              <div class="emp-field">
+                <label>勤務区分</label>
+                <select name="emp_type">
                   {% for k, v in emp_types.items() %}
                   <option value="{{ k }}" {% if r.emp_type == k %}selected{% endif %}>{{ v }}</option>
                   {% endfor %}
                 </select>
-                <input type="time" name="scheduled_start" value="{{ r.scheduled_start }}" class="num-input" style="width:75px">
-                <span style="font-size:11px">〜</span>
-                <input type="time" name="scheduled_end" value="{{ r.scheduled_end }}" class="num-input" style="width:75px">
-                <input type="number" name="auto_break_minutes" value="{{ r.auto_break_minutes }}" min="0" max="300" class="num-input" style="width:55px" title="自動控除休憩(分)">
-                <button type="submit" class="link-btn">保存</button>
-              </form>
-            </td>
-            <td style="font-size:13px">
-              {{ r.granted }} / {{ r.used }} / <strong>{{ r.remaining }}</strong>
-            </td>
-            <td>
-              <form method="post" action="/admin/users/update" class="inline-form">
-                <input type="hidden" name="user_id" value="{{ r.id }}">
-                <input type="number" name="leave_days" value="{{ r.granted }}" min="0" max="99" class="num-input">
-                <button type="submit" class="link-btn">更新</button>
-              </form>
-            </td>
-            <td>
-              <form method="post" action="/admin/users/delete" style="display:inline"
-                    onsubmit="return confirm('{{ r.name }}を削除しますか？');">
-                <input type="hidden" name="user_id" value="{{ r.id }}">
-                <button type="submit" class="link-btn cancel">削除</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+              </div>
+              <div class="emp-field">
+                <label>定時（開始〜終了）</label>
+                <div class="emp-inline">
+                  <input type="time" name="scheduled_start" value="{{ r.scheduled_start }}">
+                  <span>〜</span>
+                  <input type="time" name="scheduled_end" value="{{ r.scheduled_end }}">
+                </div>
+              </div>
+              <div class="emp-field">
+                <label>自動休憩（分）</label>
+                <input type="number" name="auto_break_minutes" value="{{ r.auto_break_minutes }}" min="0" max="300">
+              </div>
+              <button type="submit" class="btn-save">保存</button>
+            </form>
+          </div>
+
+          <!-- 入社日・メールアドレス（ヤマト給与用） -->
+          <div class="emp-section">
+            <div class="emp-section-title">入社日・メールアドレス</div>
+            <form method="post" action="/admin/users/contact" class="emp-form">
+              <input type="hidden" name="user_id" value="{{ r.id }}">
+              <div class="emp-field">
+                <label>入社日</label>
+                <input type="date" name="hire_date" value="{{ r.hire_date }}">
+              </div>
+              <div class="emp-field">
+                <label>メールアドレス（給与明細送付先）</label>
+                <input type="email" name="email" value="{{ r.email }}" placeholder="example@example.com">
+              </div>
+              <button type="submit" class="btn-save">保存</button>
+            </form>
+          </div>
+
+          <!-- 有給 -->
+          <div class="emp-section">
+            <div class="emp-section-title">有給</div>
+            <div class="emp-leave-info">
+              <span>付与 <strong>{{ r.granted }}日</strong></span>
+              <span>取得 <strong>{{ r.used }}日</strong></span>
+              <span>残 <strong>{{ r.remaining }}日</strong></span>
+            </div>
+            <form method="post" action="/admin/users/update" class="emp-form">
+              <input type="hidden" name="user_id" value="{{ r.id }}">
+              <div class="emp-field">
+                <label>付与日数を変更</label>
+                <input type="number" name="leave_days" value="{{ r.granted }}" min="0" max="99">
+              </div>
+              <button type="submit" class="btn-save">更新</button>
+            </form>
+          </div>
+
+          <!-- 削除 -->
+          <div class="emp-section emp-danger">
+            <form method="post" action="/admin/users/delete"
+                  onsubmit="return confirm('{{ r.name }}を削除しますか？');">
+              <input type="hidden" name="user_id" value="{{ r.id }}">
+              <button type="submit" class="btn-danger">この従業員を削除</button>
+            </form>
+          </div>
+        </div>
+      </details>
+      {% endfor %}
     </div>
 
-    <p style="font-size:11px; color:#888; margin-top:10px;">
+    <p style="font-size:11px; color:#888; margin-top:14px;">
       ※ 現場アルバイトは定時・自動休憩は不要（空欄／0でOK）。計算は30分単位切り捨て。<br>
       ※ 社員／本社アルバイトは定時と自動休憩(分)を設定。早出切り捨て・定時以降は残業扱い。
     </p>
@@ -118,16 +165,24 @@
     <form method="post" action="/admin/users/create" class="leave-form">
       <div class="form-grid">
         <div>
-          <label>氏名</label>
+          <label>氏名 <span class="req">*</span></label>
           <input type="text" name="name" required>
         </div>
         <div>
-          <label>ログインID（半角英数）</label>
+          <label>ログインID（半角英数）<span class="req">*</span></label>
           <input type="text" name="login_id" pattern="[A-Za-z0-9_]+" required>
         </div>
         <div>
-          <label>初期パスワード（4文字以上）</label>
+          <label>初期パスワード（4文字以上）<span class="req">*</span></label>
           <input type="text" name="password" minlength="4" required>
+        </div>
+        <div>
+          <label>入社日</label>
+          <input type="date" name="hire_date">
+        </div>
+        <div>
+          <label>メールアドレス（給与明細送付先）</label>
+          <input type="email" name="email" placeholder="example@example.com">
         </div>
         <div>
           <label>有給付与日数</label>

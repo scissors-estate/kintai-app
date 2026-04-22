@@ -49,6 +49,9 @@ def init_db():
         "ALTER TABLE users ADD COLUMN scheduled_start TEXT DEFAULT '09:00'",
         "ALTER TABLE users ADD COLUMN scheduled_end TEXT DEFAULT '18:15'",
         "ALTER TABLE users ADD COLUMN auto_break_minutes INTEGER NOT NULL DEFAULT 75",
+        # ヤマト（会計事務所）向け：入社日・メールアドレス
+        "ALTER TABLE users ADD COLUMN hire_date TEXT",
+        "ALTER TABLE users ADD COLUMN email TEXT",
         # 半休に「有給 or 公休」区分を付与
         "ALTER TABLE requests ADD COLUMN leave_kind TEXT",
     ]:
@@ -140,7 +143,8 @@ def init_db():
             fix_break_in TEXT,
             fix_break_out TEXT,
             transport_route TEXT,
-            transport_amount INTEGER
+            transport_amount INTEGER,
+            leave_kind TEXT
         )
     """)
 
@@ -326,12 +330,15 @@ def update_user_department(user_id: int, department_id, is_approver: bool):
     conn.close()
 
 
-def create_user(login_id: str, password: str, name: str, role: str, leave_days: int):
+def create_user(login_id: str, password: str, name: str, role: str, leave_days: int,
+                hire_date: str = None, email: str = None):
     conn = get_conn()
     try:
         conn.execute(
-            "INSERT INTO users (login_id, password, name, role, leave_days) VALUES (?,?,?,?,?)",
-            (login_id, password, name, role, leave_days)
+            """INSERT INTO users (login_id, password, name, role, leave_days, hire_date, email)
+               VALUES (?,?,?,?,?,?,?)""",
+            (login_id, password, name, role, leave_days,
+             hire_date or None, email or None)
         )
         conn.commit()
         return True, None
@@ -339,6 +346,17 @@ def create_user(login_id: str, password: str, name: str, role: str, leave_days: 
         return False, "同じログインIDが既に存在します"
     finally:
         conn.close()
+
+
+def update_user_contact(user_id: int, hire_date: str = None, email: str = None):
+    """入社日・メールアドレスの更新"""
+    conn = get_conn()
+    conn.execute(
+        "UPDATE users SET hire_date=?, email=? WHERE id=?",
+        (hire_date or None, email or None, user_id)
+    )
+    conn.commit()
+    conn.close()
 
 
 def delete_user(user_id: int):

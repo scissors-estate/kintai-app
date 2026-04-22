@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{ year }}年{{ month }}月 タイムカード{% if sheets|length == 1 %}（{{ sheets[0].target["name"] }}）{% else %}（{{ sheets|length }}名）{% endif %}</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 10mm 10mm 12mm 10mm;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Yu Gothic", "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif;
+    color: #222;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 20px;
+    background: #f5f5f5;
+  }
+
+  .sheet {
+    background: #fff;
+    width: 190mm;
+    margin: 0 auto 20px;
+    padding: 8mm 8mm;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+
+  .action-bar {
+    max-width: 190mm;
+    margin: 0 auto 16px;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .action-bar .info {
+    font-size: 13px;
+    color: #555;
+  }
+  .action-bar .right { display: flex; gap: 10px; }
+  .action-bar button, .action-bar a {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    text-decoration: none;
+    font-family: inherit;
+  }
+  .btn-print {
+    background: #124C6B;
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn-back {
+    background: #fff;
+    color: #124C6B;
+    border: 1px solid #124C6B !important;
+  }
+
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 2px solid #124C6B;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .head .title {
+    font-size: 16pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .head .meta {
+    font-size: 9.5pt;
+    color: #555;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .head .meta strong {
+    color: #124C6B;
+    font-size: 11pt;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px 10px;
+    margin-bottom: 10px;
+    font-size: 9.5pt;
+  }
+  .info-grid .k {
+    color: #666;
+    margin-right: 6px;
+  }
+  .info-grid .v {
+    font-weight: 600;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border: 1px solid #bbb;
+    margin-bottom: 10px;
+  }
+  .summary > div {
+    padding: 5px 4px;
+    text-align: center;
+    border-right: 1px solid #ddd;
+    font-size: 9pt;
+  }
+  .summary > div:last-child { border-right: none; }
+  .summary .lbl {
+    color: #666;
+    font-size: 8.5pt;
+  }
+  .summary .val {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #124C6B;
+    margin-top: 2px;
+  }
+
+  table.tc {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    table-layout: fixed;
+  }
+  table.tc th, table.tc td {
+    border: 1px solid #bbb;
+    padding: 3px 5px;
+    text-align: center;
+    height: 20px;
+    vertical-align: middle;
+  }
+  table.tc th {
+    background: #eef3f6;
+    font-weight: 600;
+    color: #124C6B;
+    font-size: 8.8pt;
+  }
+  table.tc td.day {
+    text-align: left;
+    padding-left: 6px;
+    font-weight: 600;
+  }
+  table.tc td.note {
+    text-align: left;
+    font-size: 8.5pt;
+    color: #444;
+    padding: 2px 5px;
+    word-break: break-all;
+  }
+  table.tc td.ot {
+    color: #124C6B;
+    font-weight: 600;
+  }
+
+  col.c-date { width: 15%; }
+  col.c-time { width: 8.5%; }
+  col.c-br   { width: 8%; }
+  col.c-wk   { width: 9%; }
+  col.c-ot   { width: 8%; }
+  col.c-tr   { width: 9%; }
+  col.c-note { width: auto; }
+
+  tr.d-sat td.day { color: #2a6db5; }
+  tr.d-sun td.day { color: #c14141; }
+  tr.d-sat { background: #f6f9fc; }
+  tr.d-sun { background: #fcf5f5; }
+
+  .tag {
+    display: inline-block;
+    background: #DEF190;
+    color: #124C6B;
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 8pt;
+    margin-left: 3px;
+    font-weight: 700;
+  }
+
+  .foot {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    color: #666;
+  }
+  .sign-boxes {
+    display: flex;
+    gap: 16px;
+  }
+  .sign-box {
+    border: 1px solid #888;
+    width: 60px;
+    height: 40px;
+    text-align: center;
+    font-size: 8pt;
+    color: #888;
+    padding-top: 2px;
+  }
+
+  /* 印刷時：ページ区切り＆UI非表示 */
+  .sheet + .sheet { page-break-before: always; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .sheet {
+      box-shadow: none;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+    .sheet + .sheet { page-break-before: always; }
+    .action-bar { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="action-bar">
+  <div class="info">
+    {% if sheets|length == 1 %}
+      {{ sheets[0].target["name"] }} の {{ year }}年{{ month }}月 タイムカード
+    {% else %}
+      {{ sheets|length }}名分のタイムカード（{{ year }}年{{ month }}月） ／ 印刷時は各人1ページずつ出力
+    {% endif %}
+  </div>
+  <div class="right">
+    <a href="{{ back_url }}" class="btn-back">← 戻る</a>
+    <button type="button" class="btn-print" onclick="window.print()">🖨 印刷 / PDF保存</button>
+  </div>
+</div>
+
+{% for s in sheets %}
+<div class="sheet">
+  <div class="head">
+    <div class="title">{{ year }}年{{ "%02d"|format(month) }}月 タイムカード</div>
+    <div class="meta">
+      <strong>{{ s.target["name"] }}</strong><br>
+      {{ s.dep_name }} ／ {{ s.emp_label }}
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div><span class="k">ログインID:</span><span class="v">{{ s.target["login_id"] }}</span></div>
+    <div><span class="k">定時:</span><span class="v">{{ s.scheduled or "-" }}</span></div>
+    <div><span class="k">自動休憩:</span><span class="v">{{ s.target["auto_break_minutes"] }}分</span></div>
+    <div><span class="k">出力日時:</span><span class="v">{{ printed_at }}</span></div>
+  </div>
+
+  <div class="summary">
+    <div><div class="lbl">出勤日数</div><div class="val">{{ s.workday_count }}日</div></div>
+    <div><div class="lbl">勤務合計</div><div class="val">{{ s.total_work }}</div></div>
+    <div><div class="lbl">残業合計</div><div class="val">{{ s.total_overtime }}</div></div>
+    <div><div class="lbl">休憩合計</div><div class="val">{{ s.total_break }}</div></div>
+    <div><div class="lbl">有給取得</div><div class="val">{{ s.leave_count }}日</div></div>
+    <div><div class="lbl">休日出勤</div><div class="val">{{ s.holiday_work_days }}日</div></div>
+    <div><div class="lbl">交通費</div><div class="val">¥{{ s.total_transport }}</div></div>
+  </div>
+
+  <table class="tc">
+    <colgroup>
+      <col class="c-date">
+      <col class="c-time"><col class="c-time">
+      <col class="c-br"><col class="c-wk"><col class="c-ot">
+      <col class="c-tr"><col class="c-note">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>日付</th><th>出勤</th><th>退勤</th>
+        <th>休憩</th><th>勤務</th><th>残業</th>
+        <th>交通費</th><th>備考</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in s.rows %}
+      <tr class="d-{{ r.day_type }}">
+        <td class="day">
+          {{ r.day }}
+          {% for t in r.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+        </td>
+        <td>{{ r.clock_in or "" }}</td>
+        <td>{{ r.clock_out or "" }}</td>
+        <td>{{ r.break or "" }}</td>
+        <td>{{ r.worked or "" }}</td>
+        <td class="{% if r.overtime %}ot{% endif %}">{{ r.overtime or "" }}</td>
+        <td>{% if r.transport %}¥{{ "{:,}".format(r.transport) }}{% endif %}</td>
+        <td class="note">
+          {% if r.transport_note %}{{ r.transport_note }}{% endif %}
+          {% if r.note %}{% if r.transport_note %} / {% endif %}{{ r.note }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="foot">
+    <div>勤怠管理システム ／ タイムカード</div>
+    <div class="sign-boxes">
+      <div class="sign-box">本人</div>
+      <div class="sign-box">管理者</div>
+      <div class="sign-box">会計事務所</div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+</body>
+</html>

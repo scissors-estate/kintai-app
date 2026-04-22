@@ -73,36 +73,36 @@
       const h = new Date().getHours();
       if (h >= 5 && h < 10) {
         return { theme: "morning", animation: "drop", font: "font-mincho",
-                 mark: "☀", msg: "おはようございます", pulse: true,
+                 mark: "✓", msg: "おはようございます", pulse: true,
                  vibe: [100, 50, 100], sound: () => beep(880, 0.2), hold: 900 };
       } else if (h >= 10 && h < 16) {
         return { theme: "noon", animation: "drop", font: "font-mincho",
-                 mark: "✿", msg: "こんにちは", pulse: true,
+                 mark: "✓", msg: "こんにちは", pulse: true,
                  vibe: [80, 40, 80], sound: () => beep(880, 0.2), hold: 900 };
       } else if (h >= 16 && h < 22) {
         return { theme: "evening", animation: "drop", font: "font-mincho",
-                 mark: "✦", msg: "こんばんは", pulse: true,
+                 mark: "✓", msg: "こんばんは", pulse: true,
                  vibe: [80, 40, 80], sound: () => beep(660, 0.25), hold: 900 };
       } else {
         return { theme: "night", animation: "drop", font: "font-mincho",
-                 mark: "☾", msg: "遅くまでお疲れさまです",
+                 mark: "✓", msg: "遅くまでお疲れさまです",
                  vibe: [80, 40, 80], sound: () => beep(520, 0.3), hold: 900 };
       }
     }
     if (type === "out") {
       return { theme: "leave", animation: "celebrate", font: "font-gothic",
-               mark: "🎉", msg: "お疲れさまでした",
+               mark: "✓", msg: "お疲れさまでした",
                vibe: [120, 60, 120, 60, 120],
                sound: chord, confetti: true, hold: 1400 };
     }
     if (type === "break_in") {
       return { theme: "break", animation: "poyon", font: "font-klee",
-               mark: "☕", msg: "ゆっくり休んでね",
+               mark: "✓", msg: "ゆっくり休んでね",
                vibe: [60], sound: () => beep(700, 0.2), hold: 800 };
     }
     if (type === "break_out") {
       return { theme: "resume", animation: "slide", font: "font-klee",
-               mark: "✨", msg: "おかえりなさい",
+               mark: "✓", msg: "おかえりなさい",
                vibe: [60], sound: () => beep(900, 0.2), hold: 800 };
     }
     return { theme: "submit", animation: "pop", font: "font-mincho-italic",

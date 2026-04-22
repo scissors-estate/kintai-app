@@ -10,6 +10,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 import csv
 import io
+import calendar
 
 import jpholiday
 import database as db
@@ -243,7 +244,9 @@ def build_monthly_rows(user_id, year, month):
         day_key = datetime.fromisoformat(p["punched_at"]).strftime("%Y-%m-%d")
         by_day[day_key].append(p)
 
-    all_days = set(by_day.keys()) | set(req_by_day.keys())
+    # 月の全日付を生成（freeeスタイル：打刻がなくても全日行を出す）
+    last_day = calendar.monthrange(year, month)[1]
+    all_days = [f"{year:04d}-{month:02d}-{d:02d}" for d in range(1, last_day + 1)]
 
     rows = []
     total_work = 0
@@ -252,8 +255,11 @@ def build_monthly_rows(user_id, year, month):
     total_holiday_minutes = 0
     leave_days = 0.0
     holiday_work_days = 0
+    workday_count = 0  # 平日出勤日数
 
-    for day_key in sorted(all_days):
+    weekday_jp = ["月", "火", "水", "木", "金", "土", "日"]
+
+    for day_key in all_days:
         day_reqs = req_by_day.get(day_key, [])
         day_punches = list(by_day.get(day_key, []))
         day_date_obj = datetime.strptime(day_key, "%Y-%m-%d").date()
@@ -319,17 +325,37 @@ def build_monthly_rows(user_id, year, month):
         total_ot += s["overtime_minutes"]
         total_break += s["break_minutes"]
 
+        # 平日出勤日数（平日に出勤打刻あり）
+        is_sun = day_date_obj.weekday() == 6
+        is_sat = day_date_obj.weekday() == 5
+        is_jp_holiday = jpholiday.is_holiday(day_date_obj)
+        is_weekday = not (is_sun or is_sat) and not is_jp_holiday \
+                     and not is_legal_holiday(day_date_obj)
+        if is_weekday and s["clock_in"]:
+            workday_count += 1
+
         # 備考（その他／打刻修正／振替系申請のメモ）
         day_note = " / ".join(r["note"] for r in day_reqs if r["note"])
 
+        # 曜日・休日フラグ（行色分け用）
+        wd_idx = day_date_obj.weekday()
+        day_type = "weekday"
+        if is_legal_holiday(day_date_obj) or is_jp_holiday or is_sun:
+            day_type = "sun"  # 赤字系（法定休日）
+        elif is_sat:
+            day_type = "sat"  # 青字系（法定外休日）
+
         rows.append({
             "date": day_key,
-            "day": datetime.strptime(day_key, "%Y-%m-%d").strftime("%m/%d (%a)"),
-            "clock_in": s["clock_in"].strftime("%H:%M") if s["clock_in"] else "-",
-            "clock_out": s["clock_out"].strftime("%H:%M") if s["clock_out"] else "-",
-            "break": fmt_hm(s["break_minutes"]) if s["break_minutes"] else "-",
-            "worked": fmt_hm(s["worked_minutes"]) if s["worked_minutes"] else "-",
-            "overtime": fmt_hm(s["overtime_minutes"]) if s["overtime_minutes"] else "-",
+            "day_num": day_date_obj.day,
+            "weekday": weekday_jp[wd_idx],
+            "day": day_date_obj.strftime("%m/%d") + f" ({weekday_jp[wd_idx]})",
+            "day_type": day_type,
+            "clock_in": s["clock_in"].strftime("%H:%M") if s["clock_in"] else "",
+            "clock_out": s["clock_out"].strftime("%H:%M") if s["clock_out"] else "",
+            "break": fmt_hm(s["break_minutes"]) if s["break_minutes"] else "",
+            "worked": fmt_hm(s["worked_minutes"]) if s["worked_minutes"] else "",
+            "overtime": fmt_hm(s["overtime_minutes"]) if s["overtime_minutes"] else "",
             "is_leave": is_full_leave or (half is not None),
             "tags": tags,
             "transport": day_transport,
@@ -337,6 +363,7 @@ def build_monthly_rows(user_id, year, month):
             "note": day_note,
             "is_holiday_work": s["worked_on_holiday"],
             "holiday_minutes": s["holiday_work_minutes"],
+            "has_data": bool(s["clock_in"] or day_reqs),
         })
 
     return {
@@ -348,6 +375,7 @@ def build_monthly_rows(user_id, year, month):
         "holiday_work_days": holiday_work_days,
         "total_holiday_minutes": total_holiday_minutes,
         "total_transport": sum(r["transport"] for r in rows),
+        "workday_count": workday_count,
         "emp_type": user_row["emp_type"],
     }
 
@@ -472,6 +500,7 @@ def monthly(request: Request, year: int = None, month: int = None):
         "holiday_work_days": data["holiday_work_days"],
         "total_holiday_minutes": fmt_hm(data["total_holiday_minutes"]),
         "total_transport": f"{data['total_transport']:,}",
+        "workday_count": data["workday_count"],
         "emp_type": data["emp_type"],
         "prev_y": prev_y, "prev_m": prev_m,
         "next_y": next_y, "next_m": next_m,
@@ -603,11 +632,13 @@ def monthly_csv(request: Request, year: int = None, month: int = None):
         [[r["day"], r["clock_in"], r["clock_out"], r["break"], r["worked"], r["overtime"],
           "○" if r["is_leave"] else "",
           r["transport"] if r["transport"] else "",
-          r["transport_note"], r["note"]] for r in data["rows"]] +
-        [[], ["勤務合計", fmt_hm(data["total_work"])],
+          r["transport_note"], r["note"]] for r in data["rows"] if r["has_data"]] +
+        [[], ["出勤日数", f"{data['workday_count']}日"],
+         ["勤務合計", fmt_hm(data["total_work"])],
          ["残業合計", fmt_hm(data["total_ot"])],
          ["休憩合計", fmt_hm(data["total_break"])],
          ["有給取得日数", f"{data['leave_count']}日"],
+         ["休日出勤", f"{data['holiday_work_days']}日"],
          ["交通費合計", f"¥{data['total_transport']:,}"]]
     )
 
@@ -657,11 +688,26 @@ def admin(request: Request):
 
     pending_count = len(db.get_all_pending_requests())
 
+    # 対象月セレクター：今月・先月・先々月
+    td = today_jst()
+    def _shift(y, m, delta):
+        total = y * 12 + (m - 1) + delta
+        return total // 12, total % 12 + 1
+    cy, cm = td.year, td.month
+    py, pm = _shift(cy, cm, -1)
+    ppy, ppm = _shift(cy, cm, -2)
+    month_options = [
+        {"y": py,  "m": pm,  "label": f"先月（{py}年{pm:02d}月）",     "selected": True},
+        {"y": cy,  "m": cm,  "label": f"今月（{cy}年{cm:02d}月）",     "selected": False},
+        {"y": ppy, "m": ppm, "label": f"先々月（{ppy}年{ppm:02d}月）", "selected": False},
+    ]
+
     return templates.TemplateResponse(request, "admin.html", {
         "user": user,
-        "today": today_jst().strftime("%Y年%m月%d日"),
+        "today": td.strftime("%Y年%m月%d日"),
         "rows": rows,
         "pending_count": pending_count,
+        "month_options": month_options,
     })
 
 
@@ -694,9 +740,97 @@ def admin_user_monthly(request: Request, user_id: int, year: int = None, month: 
         "holiday_work_days": data["holiday_work_days"],
         "total_holiday_minutes": fmt_hm(data["total_holiday_minutes"]),
         "total_transport": f"{data['total_transport']:,}",
+        "workday_count": data["workday_count"],
         "emp_type": data["emp_type"],
         "prev_y": prev_y, "prev_m": prev_m,
         "next_y": next_y, "next_m": next_m,
+    })
+
+
+def _build_print_sheet(target, year, month):
+    """印刷用：1人分の集計データを組み立てる"""
+    data = build_monthly_rows(target["id"], year, month)
+    dep_name = "（未所属）"
+    if target["department_id"]:
+        d = db.get_department(target["department_id"])
+        if d:
+            dep_name = d["name"]
+    emp_label = db.EMP_TYPES.get(target["emp_type"], "-")
+    scheduled = ""
+    if target["scheduled_start"] and target["scheduled_end"]:
+        scheduled = f"{target['scheduled_start']}〜{target['scheduled_end']}"
+    return {
+        "target": target,
+        "rows": data["rows"],
+        "total_work": fmt_hm(data["total_work"]),
+        "total_overtime": fmt_hm(data["total_ot"]),
+        "total_break": fmt_hm(data["total_break"]),
+        "leave_count": data["leave_count"],
+        "holiday_work_days": data["holiday_work_days"],
+        "total_holiday_minutes": fmt_hm(data["total_holiday_minutes"]),
+        "total_transport": f"{data['total_transport']:,}",
+        "workday_count": data["workday_count"],
+        "emp_type": data["emp_type"],
+        "emp_label": emp_label,
+        "scheduled": scheduled,
+        "dep_name": dep_name,
+    }
+
+
+# --- 管理者：印刷用タイムカード（A4縦・PDF保存用・1人分） ---
+@app.get("/admin/user/{user_id}/print", response_class=HTMLResponse)
+def admin_user_print(request: Request, user_id: int,
+                     year: int = None, month: int = None):
+    user = require_admin(request)
+    if not user:
+        return RedirectResponse("/login", 303)
+    target = db.get_user(user_id)
+    if not target:
+        raise HTTPException(404)
+
+    today = today_jst()
+    year = year or today.year
+    month = month or today.month
+    sheet = _build_print_sheet(target, year, month)
+
+    return templates.TemplateResponse(request, "admin_user_print.html", {
+        "user": user,
+        "year": year, "month": month,
+        "sheets": [sheet],
+        "printed_at": now_jst().strftime("%Y/%m/%d %H:%M"),
+        "back_url": f"/admin/user/{user_id}?year={year}&month={month}",
+    })
+
+
+# --- 管理者：印刷用タイムカード（複数人・全員） ---
+@app.get("/admin/print", response_class=HTMLResponse)
+def admin_print_multi(request: Request,
+                      year: int = None, month: int = None,
+                      user_ids: str = None):
+    """user_ids=カンマ区切りのIDリスト。未指定なら全員"""
+    user = require_admin(request)
+    if not user:
+        return RedirectResponse("/login", 303)
+
+    today = today_jst()
+    year = year or today.year
+    month = month or today.month
+
+    all_emps = db.get_all_employees()
+    if user_ids:
+        wanted = set(int(x) for x in user_ids.split(",") if x.strip().isdigit())
+        target_emps = [u for u in all_emps if u["id"] in wanted]
+    else:
+        target_emps = all_emps
+
+    sheets = [_build_print_sheet(u, year, month) for u in target_emps]
+
+    return templates.TemplateResponse(request, "admin_user_print.html", {
+        "user": user,
+        "year": year, "month": month,
+        "sheets": sheets,
+        "printed_at": now_jst().strftime("%Y/%m/%d %H:%M"),
+        "back_url": "/admin",
     })
 
 
@@ -868,6 +1002,13 @@ def admin_users(request: Request):
     rows = []
     for u in users:
         used = db.count_approved_leaves(u["id"])
+        # hire_date/email は後方互換（古いDBには存在しない可能性）
+        try:
+            hire_date = u["hire_date"] or ""
+            email = u["email"] or ""
+        except (IndexError, KeyError):
+            hire_date = ""
+            email = ""
         rows.append({
             "id": u["id"], "name": u["name"], "login_id": u["login_id"],
             "granted": u["leave_days"], "used": used,
@@ -880,6 +1021,8 @@ def admin_users(request: Request):
             "scheduled_start": u["scheduled_start"] or "",
             "scheduled_end": u["scheduled_end"] or "",
             "auto_break_minutes": u["auto_break_minutes"],
+            "hire_date": hire_date,
+            "email": email,
         })
     flash = request.session.pop("flash", None)
     return templates.TemplateResponse(request, "admin_users.html", {
@@ -894,12 +1037,31 @@ def admin_users_create(request: Request,
                        password: str = Form(...),
                        name: str = Form(...),
                        role: str = Form("employee"),
-                       leave_days: int = Form(10)):
+                       leave_days: int = Form(10),
+                       hire_date: str = Form(""),
+                       email: str = Form("")):
     user = require_admin(request)
     if not user:
         return RedirectResponse("/login", 303)
-    ok, err = db.create_user(login_id.strip(), password, name.strip(), role, leave_days)
+    ok, err = db.create_user(login_id.strip(), password, name.strip(), role, leave_days,
+                             hire_date=hire_date.strip() or None,
+                             email=email.strip() or None)
     request.session["flash"] = err or f"{name} を追加しました"
+    return RedirectResponse("/admin/users", 303)
+
+
+@app.post("/admin/users/contact")
+def admin_users_contact(request: Request,
+                        user_id: int = Form(...),
+                        hire_date: str = Form(""),
+                        email: str = Form("")):
+    u = require_admin(request)
+    if not u:
+        return RedirectResponse("/login", 303)
+    db.update_user_contact(user_id,
+                           hire_date=hire_date.strip() or None,
+                           email=email.strip() or None)
+    request.session["flash"] = "入社日・メールアドレスを更新しました"
     return RedirectResponse("/admin/users", 303)
 
 
@@ -1069,18 +1231,22 @@ def admin_csv(request: Request, year: int = None, month: int = None, user_ids: s
     for u in target_emps:
         data = build_monthly_rows(u["id"], year, month)
         for r in data["rows"]:
+            if not r["has_data"]:
+                continue
             rows.append([u["name"], u["login_id"], r["day"],
                          r["clock_in"], r["clock_out"], r["break"],
                          r["worked"], r["overtime"],
                          "○" if r["is_leave"] else "",
                          r["transport"] if r["transport"] else "",
                          r["transport_note"], r["note"]])
-        rows.append([u["name"], "合計", "",
+        rows.append([u["name"], "合計",
+                     f"出勤{data['workday_count']}日",
                      "", "", fmt_hm(data["total_break"]),
                      fmt_hm(data["total_work"]),
                      fmt_hm(data["total_ot"]),
                      f"{data['leave_count']}日",
-                     f"¥{data['total_transport']:,}", "", ""])
+                     f"¥{data['total_transport']:,}",
+                     f"休日出勤{data['holiday_work_days']}日", ""])
         rows.append([])
 
     return _csv_response(f"kintai_all_{year}{month:02d}.csv", rows)
