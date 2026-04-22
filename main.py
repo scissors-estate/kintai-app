@@ -277,16 +277,24 @@ def build_monthly_rows(user_id, year, month):
                 })
         day_punches.sort(key=lambda p: p["punched_at"])
 
-        # 承認済み「打刻修正」→ 打刻を上書き
+        # 承認済み「打刻修正」→ 指定フィールドのみ上書き、空欄は元の打刻を使用
         punch_fix = next((r for r in day_reqs if r["req_type"] == "punch_fix"), None)
         if punch_fix:
+            # 元の打刻から種別ごとの時刻を取得
+            orig_map = {}
+            for p in by_day.get(day_key, []):
+                pt = p["punch_type"]
+                if pt not in orig_map:
+                    orig_map[pt] = datetime.fromisoformat(p["punched_at"]).strftime("%H:%M")
             day_punches = []
             for kind, col in [("in","fix_clock_in"),("break_in","fix_break_in"),
                               ("break_out","fix_break_out"),("out","fix_clock_out")]:
-                if punch_fix[col]:
+                # 修正値があればそれを、なければ元の打刻を使用
+                time_val = punch_fix[col] or orig_map.get(kind)
+                if time_val:
                     day_punches.append({
                         "punch_type": kind,
-                        "punched_at": f"{day_key}T{punch_fix[col]}:00",
+                        "punched_at": f"{day_key}T{time_val}:00",
                     })
 
         s = calc_day_summary(day_punches, user=user_row, day_date=day_date_obj)
